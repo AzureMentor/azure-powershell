@@ -9,18 +9,19 @@ namespace Commands.Aks.Test.ScenarioTests
 {
     public class KubernetesTests : RMTestBase
     {
+        XunitTracingInterceptor _logger;
         public KubernetesTests(ITestOutputHelper output)
         {
-            XunitTracingInterceptor.AddToContext(new XunitTracingInterceptor(output));
+            _logger = new XunitTracingInterceptor(output);
+            XunitTracingInterceptor.AddToContext(_logger);
             TestExecutionHelpers.SetUpSessionAndProfile();
         }
 
-        [Fact(Skip = "Need service team to re-record test after changes to the ClientRuntime.")]
+        [Fact]
         [Trait(Category.AcceptanceType, Category.CheckIn)]
-        [Trait("Re-record", "ClientRuntime changes")]
         public void TestAzureKubernetes()
         {
-            TestController.NewInstance.RunPowerShellTest("Test-AzureRmKubernetes");
+            TestController.NewInstance.RunPowerShellTest(_logger, "Test-AzureRmKubernetes");
         }
     }
 }

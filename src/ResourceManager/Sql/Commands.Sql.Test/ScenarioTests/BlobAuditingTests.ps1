@@ -62,7 +62,7 @@ function Test-BlobAuditingDatabaseUpdatePolicyWithSameNameStorageOnDifferentRegi
 		Assert-AreEqual $policy.AuditState "Enabled"  
 
 		$newResourceGroupName =  "test-rg2-for-sql-cmdlets-" + $testSuffix
-		New-AzureRmResourceGroup -Location "japanwest" -ResourceGroupName $newResourceGroupName
+		New-AzureRmResourceGroup -Location "West Europe" -ResourceGroupName $newResourceGroupName
 		New-AzureRmStorageAccount -StorageAccountName $params.storageAccount  -ResourceGroupName $newResourceGroupName -Location "West Europe" -Type Standard_GRS 
 
 		Set-AzureRmSqlDatabaseAuditing -State Enabled -ResourceGroupName $params.rgname -ServerName $params.serverName -DatabaseName $params.databaseName -StorageAccountName $params.storageAccount
@@ -516,6 +516,20 @@ function Test-BlobAuditingOnDatabase
 		Assert-AreEqual $policy.RetentionInDays 8
 		Assert-True { $policy.StorageKeyType -eq  "Primary"}
 		
+		# Test - Tests setting blob auditing policy on a database with a storage account in a subscription which is different than the database's subscription
+		Set-AzureRmSqlDatabaseAuditing -State Enabled -ResourceGroupName $params.rgname -ServerName $params.serverName -DatabaseName $params.databaseName -StorageAccountName datasecpstests -AuditActionGroup "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP", "FAILED_DATABASE_AUTHENTICATION_GROUP" -RetentionInDays 8 -StorageAccountSubscriptionId b403f7d6-87fb-4a39-8b34-b2172f985b78
+		$policy = Get-AzureRmSqlDatabaseAuditing -ResourceGroupName $params.rgname -ServerName $params.serverName -DatabaseName $params.databaseName
+	
+		# Assert
+		Assert-AreEqual $policy.AuditState "Enabled"
+		Assert-AreEqual $policy.AuditActionGroup.Length 2
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::FAILED_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-AreEqual $policy.AuditAction.Length 0
+		Assert-AreEqual $policy.RetentionInDays 8
+		Assert-True { $policy.StorageKeyType -eq  "Primary"}
+		Assert-AreEqual $policy.StorageAccountSubscriptionId "b403f7d6-87fb-4a39-8b34-b2172f985b78"
+
 		# Test	
 		Set-AzureRmSqlDatabaseAuditing -State Enabled -ResourceGroupName $params.rgname -ServerName $params.serverName -DatabaseName $params.databaseName -StorageAccountName $params.storageAccount -StorageKeyType "Secondary" -AuditActionGroup "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP", "FAILED_DATABASE_AUTHENTICATION_GROUP" -RetentionInDays 8 -AuditAction "UPDATE ON database::[$($params.databaseName)] BY [public]"
 		$policy = Get-AzureRmSqlDatabaseAuditing -ResourceGroupName $params.rgname -ServerName $params.serverName -DatabaseName $params.databaseName
@@ -537,6 +551,15 @@ function Test-BlobAuditingOnDatabase
 		# Assert
 		Assert-AreEqual $policy.AuditState "Disabled"
 		Assert-AreEqual $policy.AuditAction.Length 1
+
+		# Test - Providing empty AuditActionGroups and an AuditAction
+		Set-AzureRmSqlDatabaseAuditing -State Disabled -ResourceGroupName $params.rgname -ServerName $params.serverName -DatabaseName $params.databaseName -AuditActionGroup @() -AuditAction "UPDATE ON database::[$($params.databaseName)] BY [public]"
+		$policy = Get-AzureRmSqlDatabaseAuditing -ResourceGroupName $params.rgname -ServerName $params.serverName -DatabaseName $params.databaseName
+	
+		# Assert
+		Assert-AreEqual $policy.AuditActionGroup.Length 0
+		Assert-AreEqual $policy.AuditAction.Length 1
+		Assert-AreEqual $policy.AuditAction[0] "UPDATE ON database::[$($params.databaseName)] BY [public]"
 	}
 	finally
 	{
@@ -569,6 +592,19 @@ function Test-BlobAuditingOnServer
 		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::FAILED_DATABASE_AUTHENTICATION_GROUP)}
 		Assert-AreEqual $policy.RetentionInDays 8
 		Assert-AreEqual $policy.StorageKeyType "Primary"
+
+		# Test - Tests setting blob auditing policy on a server with a storage account in a subscription which is different than the server's subscription
+		Set-AzureRmSqlServerAuditing -State Enabled -ResourceGroupName $params.rgname -ServerName $params.serverName -StorageAccountName datasecpstests -AuditActionGroup "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP", "FAILED_DATABASE_AUTHENTICATION_GROUP" -RetentionInDays 8 -StorageAccountSubscriptionId b403f7d6-87fb-4a39-8b34-b2172f985b78
+		$policy = Get-AzureRmSqlServerAuditing -ResourceGroupName $params.rgname -ServerName $params.serverName
+	
+		# Assert
+		Assert-AreEqual $policy.AuditState "Enabled"
+		Assert-AreEqual $policy.AuditActionGroup.Length 2
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::FAILED_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-AreEqual $policy.RetentionInDays 8
+		Assert-AreEqual $policy.StorageKeyType "Primary"
+		Assert-AreEqual $policy.StorageAccountSubscriptionId "b403f7d6-87fb-4a39-8b34-b2172f985b78"
 
 		# Test	
 		Set-AzureRmSqlServerAuditing -State Enabled -ResourceGroupName $params.rgname -ServerName $params.serverName -StorageAccountName $params.storageAccount -StorageKeyType "Secondary" -AuditActionGroup "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP", "FAILED_DATABASE_AUTHENTICATION_GROUP" -RetentionInDays 8
@@ -790,6 +826,150 @@ function Test-DeprecatedDatabaseAuditingCmdletToBlobAuditingNewCmdlet
 	
 		# Assert
 		Assert-AreEqual $policy.AuditState "Disabled"
+	}
+	finally
+	{
+		# Cleanup
+		Remove-BlobAuditingTestEnvironment $testSuffix
+	}
+}
+
+<#
+.SYNOPSIS
+Test for extended auditing and auditing on a server
+#>
+function Test-ExtendedAuditingOnServer
+{
+	# Setup
+	$testSuffix = getAssetName
+	Create-BlobAuditingTestEnvironment $testSuffix
+	$params = Get-SqlBlobAuditingTestEnvironmentParameters $testSuffix
+
+	try
+	{
+		# Enable auditing policy, without speficying a predicate expression, and verify it.
+		Set-AzureRmSqlServerAuditing -State Enabled -ResourceGroupName $params.rgname -ServerName $params.serverName -StorageAccountName $params.storageAccount -AuditActionGroup "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP", "FAILED_DATABASE_AUTHENTICATION_GROUP" -RetentionInDays 8
+		$policy = Get-AzureRmSqlServerAuditing -ResourceGroupName $params.rgname -ServerName $params.serverName
+		Assert-AreEqual "Enabled" $policy.AuditState
+		Assert-AreEqual 2 $policy.AuditActionGroup.Length
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::FAILED_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-AreEqual 8 $policy.RetentionInDays
+		Assert-AreEqual "Primary" $policy.StorageKeyType
+		Assert-AreEqual "" $policy.PredicateExpression
+
+		# Enable Extended auditing policy, speficying a predicate expression, and verify it.
+		Set-AzureRmSqlServerAuditing -State Enabled -ResourceGroupName $params.rgname -ServerName $params.serverName -StorageAccountName $params.storageAccount -AuditActionGroup "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP", "FAILED_DATABASE_AUTHENTICATION_GROUP" -RetentionInDays 8 -PredicateExpression "statement <> 'select 1'"
+		$policy = Get-AzureRmSqlServerAuditing -ResourceGroupName $params.rgname -ServerName $params.serverName
+		Assert-AreEqual "Enabled" $policy.AuditState
+		Assert-AreEqual 2 $policy.AuditActionGroup.Length
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::FAILED_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-AreEqual 8 $policy.RetentionInDays
+		Assert-AreEqual "Primary" $policy.StorageKeyType
+		Assert-AreEqual "statement <> 'select 1'" $policy.PredicateExpression
+
+		# Disable auditing policy and verify it.
+		Set-AzureRmSqlServerAuditing -State Disabled -ResourceGroupName $params.rgname -ServerName $params.serverName
+		$policy = Get-AzureRmSqlServerAuditing -ResourceGroupName $params.rgname -ServerName $params.serverName
+		Assert-AreEqual "Disabled" $policy.AuditState
+
+		# Enable Extended auditing policy, without speficying a predicate expression, and verify it.
+		Set-AzureRmSqlServerAuditing -State Enabled -ResourceGroupName $params.rgname -ServerName $params.serverName -StorageAccountName $params.storageAccount -AuditActionGroup "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP", "FAILED_DATABASE_AUTHENTICATION_GROUP" -RetentionInDays 8
+		$policy = Get-AzureRmSqlServerAuditing -ResourceGroupName $params.rgname -ServerName $params.serverName
+		Assert-AreEqual "Enabled" $policy.AuditState
+		Assert-AreEqual 2 $policy.AuditActionGroup.Length
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::FAILED_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-AreEqual 8 $policy.RetentionInDays
+		Assert-AreEqual "Primary" $policy.StorageKeyType
+		Assert-AreEqual "statement <> 'select 1'" $policy.PredicateExpression
+
+		# Remove Extended auditing policy, and enable auditing policy
+		Set-AzureRmSqlServerAuditing -State Enabled -ResourceGroupName $params.rgname -ServerName $params.serverName -StorageAccountName $params.storageAccount -AuditActionGroup "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP", "FAILED_DATABASE_AUTHENTICATION_GROUP" -RetentionInDays 8 -PredicateExpression ""
+		$policy = Get-AzureRmSqlServerAuditing -ResourceGroupName $params.rgname -ServerName $params.serverName
+		Assert-AreEqual "Enabled" $policy.AuditState
+		Assert-AreEqual 2 $policy.AuditActionGroup.Length
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::FAILED_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-AreEqual 8 $policy.RetentionInDays
+		Assert-AreEqual "Primary" $policy.StorageKeyType
+		Assert-AreEqual "" $policy.PredicateExpression
+
+		# Disable auditing policy.
+		Set-AzureRmSqlServerAuditing -State Disabled -ResourceGroupName $params.rgname -ServerName $params.serverName
+	}
+	finally
+	{
+		# Cleanup
+		Remove-BlobAuditingTestEnvironment $testSuffix
+	}
+}
+
+<#
+.SYNOPSIS
+Test for extended auditing and auditing on a database
+#>
+function Test-ExtendedAuditingOnDatabase
+{
+	# Setup
+	$testSuffix = getAssetName
+	Create-BlobAuditingTestEnvironment $testSuffix
+	$params = Get-SqlBlobAuditingTestEnvironmentParameters $testSuffix
+
+	try
+	{
+		# Enable auditing policy, without speficying a predicate expression, and verify it.
+		Set-AzureRmSqlDatabaseAuditing -State Enabled -ResourceGroupName $params.rgname -ServerName $params.serverName -DatabaseName $params.databaseName -StorageAccountName $params.storageAccount -AuditActionGroup "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP", "FAILED_DATABASE_AUTHENTICATION_GROUP" -RetentionInDays 8
+		$policy = Get-AzureRmSqlDatabaseAuditing -ResourceGroupName $params.rgname -ServerName $params.serverName -DatabaseName $params.databaseName
+		Assert-AreEqual "Enabled" $policy.AuditState
+		Assert-AreEqual 2 $policy.AuditActionGroup.Length
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::FAILED_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-AreEqual 8 $policy.RetentionInDays
+		Assert-AreEqual "Primary" $policy.StorageKeyType
+		Assert-AreEqual "" $policy.PredicateExpression
+
+		# Enable Extended auditing policy, speficying a predicate expression, and verify it.
+		Set-AzureRmSqlDatabaseAuditing -State Enabled -ResourceGroupName $params.rgname -ServerName $params.serverName -DatabaseName $params.databaseName -StorageAccountName $params.storageAccount -AuditActionGroup "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP", "FAILED_DATABASE_AUTHENTICATION_GROUP" -RetentionInDays 8 -PredicateExpression "statement <> 'select 1'"
+		$policy = Get-AzureRmSqlDatabaseAuditing -ResourceGroupName $params.rgname -ServerName $params.serverName -DatabaseName $params.databaseName
+		Assert-AreEqual "Enabled" $policy.AuditState
+		Assert-AreEqual 2 $policy.AuditActionGroup.Length
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::FAILED_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-AreEqual 8 $policy.RetentionInDays
+		Assert-AreEqual "Primary" $policy.StorageKeyType
+		Assert-AreEqual "statement <> 'select 1'" $policy.PredicateExpression
+
+		# Disable auditing policy and verify it.
+		Set-AzureRmSqlDatabaseAuditing -State Disabled -ResourceGroupName $params.rgname -ServerName $params.serverName -DatabaseName $params.databaseName 
+		$policy = Get-AzureRmSqlDatabaseAuditing -ResourceGroupName $params.rgname -ServerName $params.serverName -DatabaseName $params.databaseName
+		Assert-AreEqual "Disabled" $policy.AuditState
+
+		# Enable Extended auditing policy, without speficying a predicate expression, and verify it.
+		Set-AzureRmSqlDatabaseAuditing -State Enabled -ResourceGroupName $params.rgname -ServerName $params.serverName -DatabaseName $params.databaseName -StorageAccountName $params.storageAccount -AuditActionGroup "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP", "FAILED_DATABASE_AUTHENTICATION_GROUP" -RetentionInDays 8
+		$policy = Get-AzureRmSqlDatabaseAuditing -ResourceGroupName $params.rgname -ServerName $params.serverName -DatabaseName $params.databaseName
+		Assert-AreEqual "Enabled" $policy.AuditState
+		Assert-AreEqual 2 $policy.AuditActionGroup.Length
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::FAILED_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-AreEqual 8 $policy.RetentionInDays
+		Assert-AreEqual "Primary" $policy.StorageKeyType
+		Assert-AreEqual "statement <> 'select 1'" $policy.PredicateExpression
+
+		# Remove Extended auditing policy, and enable auditing policy
+		Set-AzureRmSqlDatabaseAuditing -State Enabled -ResourceGroupName $params.rgname -ServerName $params.serverName -DatabaseName $params.databaseName -StorageAccountName $params.storageAccount -AuditActionGroup "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP", "FAILED_DATABASE_AUTHENTICATION_GROUP" -RetentionInDays 8 -PredicateExpression ""
+		$policy = Get-AzureRmSqlDatabaseAuditing -ResourceGroupName $params.rgname -ServerName $params.serverName -DatabaseName $params.databaseName
+		Assert-AreEqual "Enabled" $policy.AuditState
+		Assert-AreEqual 2 $policy.AuditActionGroup.Length
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-True {$policy.AuditActionGroup.Contains([Microsoft.Azure.Commands.Sql.Auditing.Model.AuditActionGroups]::FAILED_DATABASE_AUTHENTICATION_GROUP)}
+		Assert-AreEqual 8 $policy.RetentionInDays
+		Assert-AreEqual "Primary" $policy.StorageKeyType
+		Assert-AreEqual "" $policy.PredicateExpression
+
+		# Disable auditing policy.
+		Set-AzureRmSqlDatabaseAuditing -State Disabled -ResourceGroupName $params.rgname -ServerName $params.serverName -DatabaseName $params.databaseName 
 	}
 	finally
 	{

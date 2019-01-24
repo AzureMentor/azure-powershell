@@ -1,4 +1,4 @@
-// ----------------------------------------------------------------------------------
+﻿// ----------------------------------------------------------------------------------
 //
 // Copyright Microsoft Corporation
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,9 +25,7 @@ namespace Microsoft.Azure.Commands.KeyVault
     /// <summary>
     /// Create a new key vault.
     /// </summary>
-    [Cmdlet(VerbsCommon.New, "AzureRmKeyVault",
-        SupportsShouldProcess = true,
-        HelpUri = Constants.KeyVaultHelpUri)]
+    [Cmdlet("New", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "KeyVault",SupportsShouldProcess = true)]
     [OutputType(typeof(PSKeyVault))]
     public class NewAzureKeyVault : KeyVaultManagementCmdletBase
     {
@@ -84,9 +82,14 @@ namespace Microsoft.Azure.Commands.KeyVault
         public SwitchParameter EnabledForDiskEncryption { get; set; }
 
         [Parameter(Mandatory = false,
-            ValueFromPipelineByPropertyName = true,
+            ValueFromPipelineByPropertyName = false,
             HelpMessage = "If specified, 'soft delete' functionality is enabled for this key vault.")]
         public SwitchParameter EnableSoftDelete { get; set; }
+
+        [Parameter(Mandatory = false,
+            ValueFromPipelineByPropertyName = false,
+            HelpMessage = "If specified, protection against immediate deletion is enabled for this vault; requires soft delete to be enabled as well.")]
+        public SwitchParameter EnablePurgeProtection { get; set; }
 
         [Parameter(Mandatory = false,
             ValueFromPipelineByPropertyName = true,
@@ -141,22 +144,23 @@ namespace Microsoft.Azure.Commands.KeyVault
                 }
 
                 var newVault = KeyVaultManagementClient.CreateNewVault(new VaultCreationParameters()
-                {
-                    VaultName = this.Name,
-                    ResourceGroupName = this.ResourceGroupName,
-                    Location = this.Location,
-                    EnabledForDeployment = this.EnabledForDeployment.IsPresent,
-                    EnabledForTemplateDeployment = EnabledForTemplateDeployment.IsPresent,
-                    EnabledForDiskEncryption = EnabledForDiskEncryption.IsPresent,
-                    EnableSoftDelete = EnableSoftDelete.IsPresent,
-                    SkuFamilyName = DefaultSkuFamily,
-                    SkuName = this.Sku,
-                    TenantId = GetTenantId(),
-                    AccessPolicy = accessPolicy,
-                    Tags = this.Tag
-                },
-                ActiveDirectoryClient
-                );
+                    {
+                        VaultName = this.Name,
+                        ResourceGroupName = this.ResourceGroupName,
+                        Location = this.Location,
+                        EnabledForDeployment = this.EnabledForDeployment.IsPresent,
+                        EnabledForTemplateDeployment = EnabledForTemplateDeployment.IsPresent,
+                        EnabledForDiskEncryption = EnabledForDiskEncryption.IsPresent,
+                        EnableSoftDelete = EnableSoftDelete.IsPresent,
+                        EnablePurgeProtection = EnablePurgeProtection.IsPresent,
+                        SkuFamilyName = DefaultSkuFamily,
+                        SkuName = this.Sku,
+                        TenantId = GetTenantId(),
+                        AccessPolicy = accessPolicy,
+                        NetworkAcls = new NetworkRuleSet(),     // New key-vault takes in default network rule set
+                        Tags = this.Tag
+                    },
+                    ActiveDirectoryClient);
 
                 this.WriteObject(newVault);
 

@@ -12,8 +12,11 @@
 // limitations under the License.
 // ----------------------------------------------------------------------------------
 
+using Microsoft.Azure.Commands.ResourceManager.Common.ArgumentCompleters;
+using Microsoft.Azure.Commands.WebApps.Models;
 using Microsoft.Azure.Commands.WebApps.Utilities;
 using Microsoft.Azure.Management.WebSites.Models;
+using System.Linq;
 using System.Management.Automation;
 
 namespace Microsoft.Azure.Commands.WebApps.Cmdlets.BackupRestore
@@ -21,7 +24,7 @@ namespace Microsoft.Azure.Commands.WebApps.Cmdlets.BackupRestore
     /// <summary>
     /// Restores an Azure Web App backup
     /// </summary>
-    [Cmdlet(VerbsData.Restore, "AzureRmWebAppBackup")]
+    [Cmdlet("Restore", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "WebAppBackup"), OutputType(typeof(void))]
     public class RestoreAzureWebAppBackup : WebAppOptionalSlotBaseCmdlet
     {
         [Parameter(Position = 3, Mandatory = true, HelpMessage = "The SAS URL for the Azure Storage container used to store the backup.", ValueFromPipelineByPropertyName = true)]
@@ -31,6 +34,10 @@ namespace Microsoft.Azure.Commands.WebApps.Cmdlets.BackupRestore
         [Parameter(Position = 4, Mandatory = true, HelpMessage = "The name of the backup blob to restore.", ValueFromPipelineByPropertyName = true)]
         [ValidateNotNullOrEmpty]
         public string BlobName;
+
+        [Parameter(Mandatory = false, HelpMessage = "The name of the App Service Plan for the restored app. If left empty, the app's current App Service Plan is used.", ValueFromPipelineByPropertyName = true)]
+        [ResourceNameCompleter("Microsoft.Web/serverfarms", "DoNotFilter")]
+        public string AppServicePlan { get; set; }
 
         [Parameter(Mandatory = false, HelpMessage = "The databases to restore. Must match the list of databases in the backup.", ValueFromPipelineByPropertyName = true)]
         public DatabaseBackupSetting[] Databases { get; set; }
@@ -44,13 +51,18 @@ namespace Microsoft.Azure.Commands.WebApps.Cmdlets.BackupRestore
         public override void ExecuteCmdlet()
         {
             base.ExecuteCmdlet();
+            if (string.IsNullOrEmpty(AppServicePlan))
+            {
+                var app = new PSSite(WebsitesClient.GetWebApp(ResourceGroupName, Name, Slot));
+                this.AppServicePlan = app.ServerFarmId.Split('/').Last();
+            }
             RestoreRequest request = new RestoreRequest()
             {
-                Location = "",
                 StorageAccountUrl = this.StorageAccountUrl,
                 BlobName = this.BlobName,
                 SiteName = CmdletHelpers.GenerateSiteWithSlotName(Name, Slot),
                 Overwrite = this.Overwrite.IsPresent,
+                AppServicePlan = this.AppServicePlan,
                 IgnoreConflictingHostNames = this.IgnoreConflictingHostNames.IsPresent,
                 Databases = this.Databases,
                 OperationType = BackupRestoreOperationType.Default

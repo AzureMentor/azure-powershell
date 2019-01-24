@@ -30,13 +30,14 @@ using Microsoft.Azure.Management.Compute.Models;
 using Microsoft.Azure.Management.Internal.Network.Version2017_10_01;
 using Microsoft.Azure.Management.Internal.Resources;
 using Microsoft.Azure.Management.Internal.Resources.Models;
-using Microsoft.Azure.Management.Storage;
-using Microsoft.Azure.Management.Storage.Models;
+using Microsoft.Azure.Management.Storage.Version2017_10_01;
+using Microsoft.Azure.Management.Storage.Version2017_10_01.Models;
 using Microsoft.WindowsAzure.Commands.Sync.Download;
 using Microsoft.WindowsAzure.Commands.Tools.Vhd;
 using Microsoft.WindowsAzure.Commands.Tools.Vhd.Model;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Management.Automation;
@@ -48,11 +49,7 @@ using CM = Microsoft.Azure.Management.Compute.Models;
 
 namespace Microsoft.Azure.Commands.Compute
 {
-    [Cmdlet(
-        VerbsCommon.New,
-        ProfileNouns.VirtualMachine,
-        SupportsShouldProcess = true,
-        DefaultParameterSetName = "SimpleParameterSet")]
+    [Cmdlet("New", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "VM",SupportsShouldProcess = true,DefaultParameterSetName = "SimpleParameterSet")]
     [OutputType(typeof(PSAzureOperationResponse), typeof(PSVirtualMachine))]
     public class NewAzureVMCommand : VirtualMachineBaseCmdlet
     {
@@ -65,7 +62,7 @@ namespace Microsoft.Azure.Commands.Compute
             Mandatory = true,
             Position = 0,
             ValueFromPipelineByPropertyName = true)]
-        [ResourceGroupCompleter()]
+        [ResourceGroupCompleter]
         [Parameter(
             ParameterSetName = SimpleParameterSet,
             Mandatory = false)]
@@ -118,8 +115,6 @@ namespace Microsoft.Azure.Commands.Compute
             ParameterSetName = DefaultParameterSet,
             Mandatory = false,
             ValueFromPipelineByPropertyName = true)]
-        [Obsolete("New-AzureRmVm: -Tags will be removed in favor of -Tag in an upcoming breaking change release.  Please start using the -Tag parameter to avoid breaking scripts.")]
-        [Alias("Tags")]
         public Hashtable Tag { get; set; }
 
         [Parameter(
@@ -190,8 +185,10 @@ namespace Microsoft.Azure.Commands.Compute
             "Win2016Datacenter",
             "Win2012R2Datacenter",
             "Win2012Datacenter",
-            "Win2008R2SP1")]
-        public string ImageName { get; set; } = "Win2016Datacenter";
+            "Win2008R2SP1",
+            "Win10")]
+        [Alias("ImageName")]
+        public string Image { get; set; } = "Win2016Datacenter";
 
         [Parameter(ParameterSetName = DiskFileParameterSet, Mandatory = true)]
         [ValidateNotNullOrEmpty]
@@ -208,6 +205,15 @@ namespace Microsoft.Azure.Commands.Compute
         [Parameter(ParameterSetName = DiskFileParameterSet, Mandatory = false)]
         public string AvailabilitySetName { get; set; }
 
+        [Parameter(ParameterSetName = SimpleParameterSet, Mandatory = false, HelpMessage = "Use this to add system assigned identity (MSI) to the vm")]
+        [Parameter(ParameterSetName = DiskFileParameterSet, Mandatory = false, HelpMessage = "Use this to add system assigned identity (MSI) to the vm")]
+        public SwitchParameter SystemAssignedIdentity { get; set; }
+
+        [Parameter(ParameterSetName = SimpleParameterSet, Mandatory = false, HelpMessage = "Use this to add the assign user specified identity (MSI) to the VM")]
+        [Parameter(ParameterSetName = DiskFileParameterSet, Mandatory = false, HelpMessage = "Use this to add the assign user specified identity (MSI) to the VM")]
+        [ValidateNotNullOrEmpty]
+        public string UserAssignedIdentity { get; set; }
+
         [Parameter(Mandatory = false, HelpMessage = "Run cmdlet in the background")]
         public SwitchParameter AsJob { get; set; }
 
@@ -215,10 +221,12 @@ namespace Microsoft.Azure.Commands.Compute
         [Parameter(ParameterSetName = DiskFileParameterSet, Mandatory = false)]
         public int[] DataDiskSizeInGb { get; set; }
 
+        [Parameter(ParameterSetName = SimpleParameterSet, Mandatory = false)]
+        [Parameter(ParameterSetName = DiskFileParameterSet, Mandatory = false)]
+        public SwitchParameter EnableUltraSSD { get; set; }
+
         public override void ExecuteCmdlet()
         {
-            WriteWarning("New-AzureRmVM: A property of the output of this cmdlet will change in an upcoming breaking change release. " +
-                         "The StorageAccountType property for a DataDisk will return Standard_LRS and Premium_LRS");
             switch (ParameterSetName)
             {
                 case SimpleParameterSet:
@@ -253,6 +261,8 @@ namespace Microsoft.Azure.Commands.Compute
                 set { _cmdlet.Location = value; }
             }
 
+            public string DefaultLocation => "eastus";
+
             public BlobUri DestinationUri;
 
             public async Task<ResourceConfig<VirtualMachine>> CreateConfigAsync()
@@ -260,7 +270,7 @@ namespace Microsoft.Azure.Commands.Compute
                 if (_cmdlet.DiskFile == null)
                 {
                     ImageAndOsType = await _client.UpdateImageAndOsTypeAsync(
-                        ImageAndOsType, _cmdlet.ResourceGroupName, _cmdlet.ImageName, Location);
+                        ImageAndOsType, _cmdlet.ResourceGroupName, _cmdlet.Image, Location);
                 }
 
                 _cmdlet.DomainNameLabel = await PublicIPAddressStrategy.UpdateDomainNameLabelAsync(
@@ -286,8 +296,11 @@ namespace Microsoft.Azure.Commands.Compute
                     name: _cmdlet.SecurityGroupName,
                     openPorts: _cmdlet.OpenPorts);
 
+                bool enableAcceleratedNetwork = Utils.DoesConfigSupportAcceleratedNetwork(_client,
+                    ImageAndOsType, _cmdlet.Size, Location, DefaultLocation);
+
                 var networkInterface = resourceGroup.CreateNetworkInterfaceConfig(
-                    _cmdlet.Name, subnet, publicIpAddress, networkSecurityGroup);
+                    _cmdlet.Name, subnet, publicIpAddress, networkSecurityGroup, enableAcceleratedNetwork);
 
                 var availabilitySet = _cmdlet.AvailabilitySetName == null
                     ? null
@@ -305,7 +318,9 @@ namespace Microsoft.Azure.Commands.Compute
                         size: _cmdlet.Size,
                         availabilitySet: availabilitySet,
                         dataDisks: _cmdlet.DataDiskSizeInGb,
-                        zones: _cmdlet.Zone);
+                        zones: _cmdlet.Zone,
+                        ultraSSDEnabled: _cmdlet.EnableUltraSSD.IsPresent,
+                        identity: _cmdlet.GetVMIdentityFromArgs());
                 }
                 else
                 {
@@ -321,7 +336,9 @@ namespace Microsoft.Azure.Commands.Compute
                         size: _cmdlet.Size,
                         availabilitySet: availabilitySet,
                         dataDisks: _cmdlet.DataDiskSizeInGb,
-                        zones: _cmdlet.Zone);
+                        zones: _cmdlet.Zone,
+                        ultraSSDEnabled: _cmdlet.EnableUltraSSD.IsPresent,
+                        identity: _cmdlet.GetVMIdentityFromArgs());
                 }
             }
         }
@@ -338,6 +355,7 @@ namespace Microsoft.Azure.Commands.Compute
 
             var parameters = new Parameters(this, client);
 
+
             if (DiskFile != null)
             {
                 var resourceClient = AzureSession.Instance.ClientFactory.CreateArmClient<ResourceManagementClient>(
@@ -345,6 +363,7 @@ namespace Microsoft.Azure.Commands.Compute
                     AzureEnvironment.Endpoint.ResourceManager);
                 if (!resourceClient.ResourceGroups.CheckExistence(ResourceGroupName))
                 {
+                    Location = Location ?? parameters.DefaultLocation;
                     var st0 = resourceClient.ResourceGroups.CreateOrUpdate(
                         ResourceGroupName,
                         new ResourceGroup
@@ -365,14 +384,10 @@ namespace Microsoft.Azure.Commands.Compute
                     Name,
                     new StorageAccountCreateParameters
                 {
-#if !NETSTANDARD
-                    AccountType = AccountType.PremiumLRS,
-#else
-                    Sku = new Microsoft.Azure.Management.Storage.Models.Sku
+                    Sku = new Microsoft.Azure.Management.Storage.Version2017_10_01.Models.Sku
                     {
                         Name = SkuName.PremiumLRS
                     },
-#endif
                     Location = Location
                 });
                 var filePath = new FileInfo(SessionState.Path.GetUnresolvedProviderPathFromPSPath(DiskFile));
@@ -414,7 +429,7 @@ namespace Microsoft.Azure.Commands.Compute
                 }
             }
 
-            var result = await StrategyCmdlet.RunAsync(client, parameters, asyncCmdlet, new CancellationToken());
+            var result = await client.RunAsync(client.SubscriptionId, parameters, asyncCmdlet);
 
             if (result != null)
             {
@@ -461,7 +476,7 @@ namespace Microsoft.Azure.Commands.Compute
                     {
                         DiagnosticsProfile = this.VM.DiagnosticsProfile,
                         HardwareProfile = this.VM.HardwareProfile,
-                        StorageProfile = this.VM.StorageProfile.ToSerializedStorageProfile(),
+                        StorageProfile = this.VM.StorageProfile,
                         NetworkProfile = this.VM.NetworkProfile,
                         OsProfile = this.VM.OSProfile,
                         Plan = this.VM.Plan,
@@ -469,7 +484,7 @@ namespace Microsoft.Azure.Commands.Compute
                         AvailabilitySet = this.VM.AvailabilitySetReference,
                         Location = this.Location ?? this.VM.Location,
                         Tags = this.Tag != null ? this.Tag.ToDictionary() : this.VM.Tags,
-                        Identity = this.VM.Identity,
+                        Identity = ComputeAutoMapperProfile.Mapper.Map<VirtualMachineIdentity>(this.VM.Identity),
                         Zones = this.Zone ?? this.VM.Zones,
                     };
 
@@ -510,6 +525,35 @@ namespace Microsoft.Azure.Commands.Compute
                     WriteObject(psResult);
                 });
             }
+        }
+
+        /// <summary>
+        /// Heres whats happening here :
+        /// If "SystemAssignedIdentity" and "UserAssignedIdentity" are both present we set the type of identity to be SystemAssignedUsrAssigned and set the user 
+        /// defined identity in the VM identity object.
+        /// If only "SystemAssignedIdentity" is present, we just set the type of the Identity to "SystemAssigned" and no identity ids are set as its created by Azure
+        /// If only "UserAssignedIdentity" is present, we set the type of the Identity to be "UserAssigned" and set the Identity in the VM identity object.
+        /// If neither is present, we return a null.
+        /// </summary>
+        /// <returns>Returning the Identity generated form the cmdlet parameters "SystemAssignedIdentity" and "UserAssignedIdentity"</returns>
+        private VirtualMachineIdentity GetVMIdentityFromArgs()
+        {
+            var isUserAssignedEnabled = !string.IsNullOrWhiteSpace(UserAssignedIdentity);
+            return (SystemAssignedIdentity.IsPresent || isUserAssignedEnabled)
+                ? new VirtualMachineIdentity
+                {
+                    Type = !isUserAssignedEnabled ? 
+                           CM.ResourceIdentityType.SystemAssigned :
+                           (SystemAssignedIdentity.IsPresent ? CM.ResourceIdentityType.SystemAssignedUserAssigned : CM.ResourceIdentityType.UserAssigned),
+
+                    UserAssignedIdentities = isUserAssignedEnabled 
+                                             ? new Dictionary<string, VirtualMachineIdentityUserAssignedIdentitiesValue>()
+                                             {
+                                                 { UserAssignedIdentity, new VirtualMachineIdentityUserAssignedIdentitiesValue() }
+                                             }
+                                             : null,
+                }
+                : null;
         }
 
         private string GetBginfoExtension()

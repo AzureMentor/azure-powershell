@@ -21,8 +21,7 @@ using System.Security.Permissions;
 
 namespace Microsoft.Azure.Commands.DataFactories
 {
-    [Cmdlet(VerbsCommon.Remove, Constants.DataFactory, DefaultParameterSetName = ByFactoryName, 
-        SupportsShouldProcess = true)]
+    [Cmdlet("Remove", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "DataFactory", DefaultParameterSetName = ByFactoryName, SupportsShouldProcess = true), OutputType(typeof(void))]
     public class RemoveAzureDataFactoryCommand : DataFactoryBaseCmdlet
     {
         [Parameter(ParameterSetName = ByFactoryName, Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true,
@@ -37,7 +36,6 @@ namespace Microsoft.Azure.Commands.DataFactories
         [Parameter(Mandatory = false, HelpMessage = "Don't ask for confirmation.")]
         public SwitchParameter Force { get; set; }
 
-        [EnvironmentPermission(SecurityAction.Demand, Unrestricted = true)]
         public override void ExecuteCmdlet()
         {
             if (ParameterSetName == ByFactoryObject)

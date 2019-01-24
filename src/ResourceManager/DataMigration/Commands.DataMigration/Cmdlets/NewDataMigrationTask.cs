@@ -1,22 +1,30 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="NewDataMigrationTask.cs" company="Microsoft">
-//     Copyright (c) Microsoft Corporation.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+﻿// ----------------------------------------------------------------------------------
+//
+// Copyright Microsoft Corporation
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ----------------------------------------------------------------------------------
 
+using System.Management.Automation;
 using Microsoft.Azure.Commands.DataMigration.Common;
 using Microsoft.Azure.Commands.DataMigration.Models;
 using Microsoft.Azure.Management.DataMigration;
 using Microsoft.Azure.Management.DataMigration.Models;
-using System.Management.Automation;
 
 namespace Microsoft.Azure.Commands.DataMigration.Cmdlets
 {
     /// <summary>
     /// Class for the cmdlet to create task.
     /// </summary>
-    [Cmdlet(VerbsCommon.New, "AzureRmDataMigrationTask", DefaultParameterSetName = ComponentNameParameterSet , SupportsShouldProcess = true), OutputType(typeof(PSProjectTask))]
-    [Alias("New-AzureRmDmsTask")]
+    [Cmdlet("New", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "DataMigrationTask", DefaultParameterSetName = ComponentNameParameterSet, SupportsShouldProcess = true), OutputType(typeof(PSProjectTask))]
+    [Alias("New-" + ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "DmsTask")]
     public class NewDataMigrationTask : DataMigrationCmdlet, IDynamicParameters
     {
         [Parameter(
@@ -70,7 +78,7 @@ namespace Microsoft.Azure.Commands.DataMigration.Cmdlets
         [Parameter(
             Mandatory = true,
             ParameterSetName = ComponentNameParameterSet,
-            HelpMessage = "Data Migration Service Name.")]
+            HelpMessage = "Database Migration Service Name.")]
         [ValidateNotNullOrEmpty]
         public string ServiceName { get; set; }
 
@@ -96,7 +104,6 @@ namespace Microsoft.Azure.Commands.DataMigration.Cmdlets
 
             if (taskTypeSet)
             {
-
                 switch (taskType)
                 {
                     case TaskTypeEnum.ConnectToSourceSqlServer:
@@ -110,6 +117,30 @@ namespace Microsoft.Azure.Commands.DataMigration.Cmdlets
                         break;
                     case TaskTypeEnum.GetUserTablesSql:
                         taskCmdlet = new GetUserTableSqlCmdlet(this.MyInvocation);
+                        break;
+                    case TaskTypeEnum.ConnectToTargetSqlDbMi:
+                        taskCmdlet = new ConnectToTargetSqlDbMiTaskCmdlet(this.MyInvocation);
+                        break;
+                    case TaskTypeEnum.MigrateSqlServerSqlDbMi:
+                        taskCmdlet = new MigrateSqlServerSqlDbMiTaskCmdlet(this.MyInvocation);
+                        break;
+                    case TaskTypeEnum.ValidateSqlServerSqlDbMi:
+                        taskCmdlet = new ValidateSqlServerSqlDbMiTaskCmdlet(this.MyInvocation);
+                        break;
+                    case TaskTypeEnum.ConnectToSourceSqlServerSync:
+                        taskCmdlet = new ConnectToSourceSqlServerSyncTaskCmdlet(this.MyInvocation);
+                        break;
+                    case TaskTypeEnum.MigrateSqlServerSqlDbSync:
+                        taskCmdlet = new MigrateSqlServerSqlDbSyncTaskCmdlet(this.MyInvocation);
+                        break;
+                    case TaskTypeEnum.ConnectToTargetSqlSync:
+                        taskCmdlet = new ConnectToTargetSqlSqlDbSyncTaskCmdlet(this.MyInvocation);
+                        break;
+                    case TaskTypeEnum.GetUserTablesSqlSync:
+                        taskCmdlet = new GetUserTableSqlSyncCmdlet(this.MyInvocation);
+                        break;
+                    case TaskTypeEnum.ValidateSqlServerSqlDbSync:
+                        taskCmdlet = new ValidateSqlServerSqlDbSyncTaskCmdlet(this.MyInvocation);
                         break;
                     default:
                         throw new PSArgumentException();

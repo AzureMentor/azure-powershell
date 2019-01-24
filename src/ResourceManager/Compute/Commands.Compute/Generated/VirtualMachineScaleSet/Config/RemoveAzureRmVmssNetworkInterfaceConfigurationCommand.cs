@@ -21,6 +21,7 @@
 
 using Microsoft.Azure.Commands.Compute.Automation.Models;
 using Microsoft.Azure.Management.Compute.Models;
+using Microsoft.WindowsAzure.Commands.Common.CustomAttributes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -29,7 +30,13 @@ using System.Management.Automation;
 
 namespace Microsoft.Azure.Commands.Compute.Automation
 {
-    [Cmdlet("Remove", "AzureRmVmssNetworkInterfaceConfiguration", SupportsShouldProcess = true)]
+#if NETSTANDARD
+    [CmdletOutputBreakingChange(typeof(PSUpgradePolicy),
+        DeprecatedOutputProperties = new string[] { "AutomaticOSUpgrade", "AutoOSUpgradePolicy" })]
+    [CmdletOutputBreakingChange(typeof(PSVirtualMachineScaleSetIdentity),
+        DeprecatedOutputProperties = new string[] { "IdentityIds" })]
+#endif
+    [Cmdlet(VerbsCommon.Remove, ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "VmssNetworkInterfaceConfiguration", SupportsShouldProcess = true)]
     [OutputType(typeof(PSVirtualMachineScaleSet))]
     public partial class RemoveAzureRmVmssNetworkInterfaceConfigurationCommand : Microsoft.Azure.Commands.ResourceManager.Common.AzureRMCmdlet
     {
@@ -56,9 +63,6 @@ namespace Microsoft.Azure.Commands.Compute.Automation
 
         protected override void ProcessRecord()
         {
-            WriteWarning("Remove-AzureRmVmssNetworkInterfaceConfiguration: A property of the output of this cmdlet will change in an upcoming breaking change release. " +
-                         "The StorageAccountType property for a DataDisk will return Standard_LRS and Premium_LRS");
-
             // VirtualMachineProfile
             if (this.VirtualMachineScaleSet.VirtualMachineProfile == null)
             {
@@ -98,4 +102,3 @@ namespace Microsoft.Azure.Commands.Compute.Automation
         }
     }
 }
-

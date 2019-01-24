@@ -1,4 +1,4 @@
-// ----------------------------------------------------------------------------------
+﻿// ----------------------------------------------------------------------------------
 //
 // Copyright Microsoft Corporation
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,14 +16,15 @@ using Microsoft.Azure.Commands.DataLakeStore.Models;
 using Microsoft.Azure.Commands.DataLakeStore.Properties;
 using System.Management.Automation;
 using System.Linq;
+using Microsoft.Azure.DataLake.Store.AclTools;
 
 namespace Microsoft.Azure.Commands.DataLakeStore
 {
-    [Cmdlet(VerbsCommon.Set, "AzureRmDataLakeStoreItemAcl", SupportsShouldProcess = true), 
-        OutputType(typeof(bool))]
+    [Cmdlet("Set", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "DataLakeStoreItemAcl", SupportsShouldProcess = true), OutputType(typeof(DataLakeStoreItemAce))]
     [Alias("Set-AdlStoreItemAcl")]
     public class SetAzureDataLakeStoreItemAcl : DataLakeStoreFileSystemCmdletBase
     {
+
         [Parameter(ValueFromPipelineByPropertyName = true, Position = 0, Mandatory = true,
             HelpMessage = "The DataLakeStore account to execute the filesystem operation in")]
         [ValidateNotNullOrEmpty]
@@ -51,6 +52,24 @@ namespace Microsoft.Azure.Commands.DataLakeStore
             )]
         public SwitchParameter PassThru { get; set; }
 
+        [Parameter(ValueFromPipelineByPropertyName = true, Mandatory = false,
+            HelpMessage =
+                "Indicates the ACL to be set recursively to the child subdirectories and files"
+        )]
+        public SwitchParameter Recurse { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true, Mandatory = false,
+            HelpMessage =
+                "Indicates the number of files/directories processed in parallel for recursive processing. Default will be computed as a best effort based on system specification."
+        )]
+        public int Concurrency { get; set; } = -1;
+
+        [Parameter(Mandatory = false,
+            HelpMessage =
+                "If passed then progress status is showed. Only applicable when recursive Acl Set is done."
+        )]
+        public SwitchParameter ShowProgress { get; set; }
+
         public override void ExecuteCmdlet()
         {
             WriteWarning(Resources.IncorrectOutputTypeWarning);
@@ -58,18 +77,28 @@ namespace Microsoft.Azure.Commands.DataLakeStore
                 string.Format(Resources.SetDataLakeStoreItemAcl, Path.OriginalPath),
                 Path.OriginalPath,
                 () =>
-                    {
-                        DataLakeStoreFileSystemClient.SetAcl(
-                            Path.TransformedPath,
-                            Account,
-                            Acl.Select(entry=>entry.ParseDataLakeStoreItemAce()).ToList());
+                {
+                        if (Recurse)
+                        {
+                        // Currently SDK default thread calculation is not correct, so pass a default thread count
+                        int threadCount = Concurrency == -1 ? DataLakeStoreFileSystemClient.ImportExportMaxThreads : Concurrency;
+
+                        DataLakeStoreFileSystemClient.ChangeAclRecursively(Path.TransformedPath,
+                                Account,
+                                Acl.Select(entry => entry.ParseDataLakeStoreItemAce()).ToList(), RequestedAclType.SetAcl, threadCount, this, ShowProgress, CmdletCancellationToken);
+                        }
+                        else
+                        {
+                            DataLakeStoreFileSystemClient.SetAcl(
+                                Path.TransformedPath,
+                                Account,
+                                Acl.Select(entry => entry.ParseDataLakeStoreItemAce()).ToList());
+                        }
 
                         if (PassThru)
                         {
-                            var toReturn = DataLakeStoreFileSystemClient.GetAclStatus(Path.TransformedPath, 
-                                        Account).Entries.Select(entry=>new DataLakeStoreItemAce(entry));
-
-                            WriteObject(toReturn);
+                            WriteObject(DataLakeStoreFileSystemClient.GetAclStatus(Path.TransformedPath,
+                                    Account).Entries.Select(entry => new DataLakeStoreItemAce(entry)));
                         }
                     });
         }

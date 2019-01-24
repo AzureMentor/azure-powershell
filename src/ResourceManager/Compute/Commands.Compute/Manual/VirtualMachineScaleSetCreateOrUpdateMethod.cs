@@ -47,7 +47,8 @@ namespace Microsoft.Azure.Commands.Compute.Automation
             "Win2016Datacenter",
             "Win2012R2Datacenter",
             "Win2012Datacenter",
-            "Win2008R2SP1")]
+            "Win2008R2SP1",
+            "Win10")]
         public string ImageName { get; set; } = "Win2016Datacenter";
 
         [Parameter(ParameterSetName = SimpleParameterSet, Mandatory = true)]
@@ -104,6 +105,16 @@ namespace Microsoft.Azure.Commands.Compute.Automation
         [Parameter(ParameterSetName = SimpleParameterSet, Mandatory = false)]
         public string BackendPoolName { get; set; }
 
+        [Parameter(ParameterSetName = SimpleParameterSet, Mandatory = false, HelpMessage = "Use this to add system assigned identity (MSI) to the vm")]
+        public SwitchParameter SystemAssignedIdentity { get; set; }
+
+        [Parameter(ParameterSetName = SimpleParameterSet, Mandatory = false, HelpMessage = "Use this to add the assign user specified identity (MSI) to the VM")]
+        [ValidateNotNullOrEmpty]
+        public string UserAssignedIdentity { get; set; }
+
+        [Parameter(ParameterSetName = SimpleParameterSet, Mandatory = false)]
+        public SwitchParameter EnableUltraSSD { get; set; }
+
         [Parameter(
             ParameterSetName = SimpleParameterSet,
             Mandatory = false,
@@ -116,6 +127,9 @@ namespace Microsoft.Azure.Commands.Compute.Automation
 
         [Parameter(ParameterSetName = SimpleParameterSet, Mandatory = false)]
         public int[] DataDiskSizeInGb { get; set; }
+
+        [Parameter(ParameterSetName = SimpleParameterSet, Mandatory = false, HelpMessage ="Use this to create the Scale set in a single placement group, default is multiple groups")]
+        public SwitchParameter SinglePlacementGroup;
 
         const int FirstPortRangeStart = 50000;
 
@@ -139,6 +153,8 @@ namespace Microsoft.Azure.Commands.Compute.Automation
 
             public ImageAndOsType ImageAndOsType { get; set; }
 
+            public string DefaultLocation => "eastus";
+
             public async Task<ResourceConfig<VirtualMachineScaleSet>> CreateConfigAsync()
             {
                 ImageAndOsType = await _client.UpdateImageAndOsTypeAsync(
@@ -159,7 +175,8 @@ namespace Microsoft.Azure.Commands.Compute.Automation
                     name: _cmdlet.PublicIpAddressName,
                     domainNameLabel: _cmdlet.DomainNameLabel,
                     allocationMethod: _cmdlet.AllocationMethod,
-                    sku: noZones 
+                    //sku.Basic is not compatible with multiple placement groups
+                    sku: (noZones && _cmdlet.SinglePlacementGroup.IsPresent)
                         ? PublicIPAddressStrategy.Sku.Basic
                         : PublicIPAddressStrategy.Sku.Standard,
                     zones: null);
@@ -173,7 +190,8 @@ namespace Microsoft.Azure.Commands.Compute.Automation
 
                 var loadBalancer = resourceGroup.CreateLoadBalancerConfig(
                     name: _cmdlet.LoadBalancerName,
-                    sku: noZones
+                    //sku.Basic is not compatible with multiple placement groups
+                    sku: (noZones && _cmdlet.SinglePlacementGroup.IsPresent)
                         ? LoadBalancerStrategy.Sku.Basic
                         : LoadBalancerStrategy.Sku.Standard);
 
@@ -240,12 +258,17 @@ namespace Microsoft.Azure.Commands.Compute.Automation
                         ? _cmdlet.UpgradePolicyMode
                         : (UpgradeMode?)null,
                     dataDisks: _cmdlet.DataDiskSizeInGb,
-                    zones: _cmdlet.Zone);
+                    zones: _cmdlet.Zone,
+                    ultraSSDEnabled : _cmdlet.EnableUltraSSD.IsPresent,
+                    identity: _cmdlet.GetVmssIdentityFromArgs(),
+                    singlePlacementGroup : _cmdlet.SinglePlacementGroup.IsPresent);
             }
         }
 
         async Task SimpleParameterSetExecuteCmdlet(IAsyncCmdlet asyncCmdlet)
         {
+            bool loadBalancerNamePassedIn = !String.IsNullOrWhiteSpace(LoadBalancerName);
+
             ResourceGroupName = ResourceGroupName ?? VMScaleSetName;
             VirtualNetworkName = VirtualNetworkName ?? VMScaleSetName;
             SubnetName = SubnetName ?? VMScaleSetName;
@@ -259,8 +282,20 @@ namespace Microsoft.Azure.Commands.Compute.Automation
 
             var parameters = new Parameters(this, client);
 
-            var result = await StrategyCmdlet.RunAsync(
-                client, parameters, asyncCmdlet, new CancellationToken());
+            // If the user did not specify a load balancer name, mark the LB setting to ignore
+            // preexisting check. The most common scenario is users will let the cmdlet create and name the LB for them with the default
+            // config. We do not want to block that scenario in case the cmdlet failed mid operation and tthe user kicks it off again.
+            if (!loadBalancerNamePassedIn)
+            {
+                LoadBalancerStrategy.IgnorePreExistingConfigCheck = true;
+            }
+            else
+            {
+                LoadBalancerStrategy.IgnorePreExistingConfigCheck = false;
+            }
+
+            var result = await client.RunAsync(client.SubscriptionId, parameters, asyncCmdlet);
+
 
             if (result != null)
             {
@@ -289,6 +324,34 @@ namespace Microsoft.Azure.Commands.Compute.Automation
                     range);
                 asyncCmdlet.WriteObject(psObject);
             }
+        }
+
+        /// <summary>
+        /// Heres whats happening here :
+        /// If "SystemAssignedIdentity" and "UserAssignedIdentity" are both present we set the type of identity to be SystemAssignedUsrAssigned and set the user 
+        /// defined identity in the VMSS identity object.
+        /// If only "SystemAssignedIdentity" is present, we just set the type of the Identity to "SystemAssigned" and no identity ids are set as its created by Azure
+        /// If only "UserAssignedIdentity" is present, we set the type of the Identity to be "UserAssigned" and set the Identity in the VMSS identity object.
+        /// If neither is present, we return a null.
+        /// </summary>
+        /// <returns>Returning the Identity generated form the cmdlet parameters "SystemAssignedIdentity" and "UserAssignedIdentity"</returns>
+        private VirtualMachineScaleSetIdentity GetVmssIdentityFromArgs()
+        {
+            var isUserAssignedEnabled = !string.IsNullOrWhiteSpace(UserAssignedIdentity);
+            return (SystemAssignedIdentity.IsPresent || isUserAssignedEnabled)
+                ? new VirtualMachineScaleSetIdentity
+                {
+                    Type = !isUserAssignedEnabled ?
+                           ResourceIdentityType.SystemAssigned :
+                           (SystemAssignedIdentity.IsPresent ? ResourceIdentityType.SystemAssignedUserAssigned : ResourceIdentityType.UserAssigned),
+                    UserAssignedIdentities = isUserAssignedEnabled 
+                                             ? new Dictionary<string, VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue>()
+                                             {
+                                                 { UserAssignedIdentity, new VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue()}
+                                             }
+                                             : null,
+                }
+                : null;
         }
     }
 }

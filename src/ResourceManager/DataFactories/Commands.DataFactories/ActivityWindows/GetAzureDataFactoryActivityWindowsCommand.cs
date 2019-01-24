@@ -22,7 +22,7 @@ using System.Security.Permissions;
 
 namespace Microsoft.Azure.Commands.DataFactories
 {
-    [Cmdlet(VerbsCommon.Get, Constants.ActivityWindows, DefaultParameterSetName = ByFactoryName), OutputType(typeof(List<PSActivityWindow>))]
+    [Cmdlet("Get", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "DataFactoryActivityWindow", DefaultParameterSetName = ByFactoryName), OutputType(typeof(PSActivityWindow))]
     public class GetAzureDataFactoryActivityWindowsCommand : DataFactoryBaseCmdlet
     {
         [Parameter(ParameterSetName = ByFactoryObject, Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true,
@@ -88,7 +88,6 @@ namespace Microsoft.Azure.Commands.DataFactories
         [ValidateNotNullOrEmpty]
         public int? Top { get; set; }
 
-        [EnvironmentPermission(SecurityAction.Demand, Unrestricted = true)]
         public override void ExecuteCmdlet()
         {
             if (this.ParameterSetName == ByFactoryObject)

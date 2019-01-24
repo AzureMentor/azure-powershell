@@ -13,6 +13,7 @@
 // ----------------------------------------------------------------------------------
 
 using Microsoft.Azure.Commands.KeyVault.Models;
+using Microsoft.Azure.Commands.ResourceManager.Common.ArgumentCompleters;
 using Microsoft.Azure.KeyVault.Models;
 using System.Management.Automation;
 
@@ -21,9 +22,7 @@ namespace Microsoft.Azure.Commands.KeyVault.Commands
     /// <summary>
     /// Get-AzureKeyVaultCertificatePolicy gets the policy for a certificate object in key vault.
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, CmdletNoun.AzureKeyVaultCertificatePolicy,        
-        DefaultParameterSetName = ByVaultAndCertNameParameterSet,
-        HelpUri = Constants.KeyVaultHelpUri)]
+    [Cmdlet("Get", ResourceManager.Common.AzureRMConstants.AzurePrefix + "KeyVaultCertificatePolicy",        DefaultParameterSetName = ByVaultAndCertNameParameterSet)]
     [OutputType(typeof(PSKeyVaultCertificatePolicy))]
     public class GetAzureKeyVaultCertificatePolicy : KeyVaultCmdletBase
     {
@@ -42,8 +41,8 @@ namespace Microsoft.Azure.Commands.KeyVault.Commands
         [Parameter(Mandatory = true,
                    ParameterSetName = ByVaultAndCertNameParameterSet,
                    Position = 0,
-                   ValueFromPipelineByPropertyName = true,
                    HelpMessage = "Vault name. Cmdlet constructs the FQDN of a vault based on the name and currently selected environment.")]
+        [ResourceNameCompleter("Microsoft.KeyVault/vaults", "FakeResourceGroupName")]
         [ValidateNotNullOrEmpty]
         public string VaultName { get; set; }
 
@@ -53,7 +52,6 @@ namespace Microsoft.Azure.Commands.KeyVault.Commands
         [Parameter(Mandatory = true,
                    ParameterSetName = ByVaultAndCertNameParameterSet,
                    Position = 1,
-                   ValueFromPipelineByPropertyName = true,
                    HelpMessage = "Certificate name. Cmdlet constructs the FQDN of a certificate policy from vault name, currently selected environment and certificate name.")]
         [ValidateNotNullOrEmpty]
         [Alias(Constants.CertificateName)]
@@ -74,7 +72,7 @@ namespace Microsoft.Azure.Commands.KeyVault.Commands
 
         public override void ExecuteCmdlet()
         {
-            CertificatePolicy certificatePolicy;
+            PSKeyVaultCertificatePolicy certificatePolicy;
 
             if (InputObject != null)
             {
@@ -98,7 +96,7 @@ namespace Microsoft.Azure.Commands.KeyVault.Commands
 
             if (certificatePolicy != null)
             {
-                this.WriteObject(PSKeyVaultCertificatePolicy.FromCertificatePolicy(certificatePolicy));
+                this.WriteObject(certificatePolicy);
             }
         }
     }

@@ -1,4 +1,4 @@
-// ----------------------------------------------------------------------------------
+﻿// ----------------------------------------------------------------------------------
 //
 // Copyright Microsoft Corporation
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,7 @@ using System;
 
 namespace Microsoft.Azure.Commands.Management.Storage
 {
-    [Cmdlet(VerbsCommon.New, StorageAccountNounStr), OutputType(typeof(PSStorageAccount))]
+    [Cmdlet("New", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "StorageAccount"), OutputType(typeof(PSStorageAccount))]
     public class NewAzureStorageAccountCommand : StorageAccountBaseCmdlet
     {
         [Parameter(
@@ -99,12 +99,6 @@ namespace Microsoft.Azure.Commands.Management.Storage
 
         [Parameter(
             Mandatory = false,
-            HelpMessage = "Storage Service that will enable encryption.")]
-        [Obsolete("Encryption at Rest is already enabled by default for this storage account.", false)]
-        public EncryptionSupportServiceEnum? EnableEncryptionService { get; set; }
-
-        [Parameter(
-            Mandatory = false,
             HelpMessage = "Storage Account Tags.")]
         [ValidateNotNull]
         [Alias(TagsAlias)]
@@ -139,6 +133,23 @@ namespace Microsoft.Azure.Commands.Management.Storage
         {
             get; set;
         }
+
+        [Parameter(
+            Mandatory = false,
+            HelpMessage = "Enable HierarchicalNamespace for the Storage account.")]
+        [ValidateNotNullOrEmpty]
+        public bool EnableHierarchicalNamespace
+        {
+            get
+            {
+                return enableHierarchicalNamespace.Value;
+            }
+            set
+            {
+                enableHierarchicalNamespace = value;
+            }
+        }
+        private bool? enableHierarchicalNamespace = null;
 
         [Parameter(Mandatory = false, HelpMessage = "Run cmdlet in the background")]
         public SwitchParameter AsJob { get; set; }
@@ -194,6 +205,10 @@ namespace Microsoft.Azure.Commands.Management.Storage
             if (NetworkRuleSet != null)
             {
                 createParameters.NetworkRuleSet = PSNetworkRuleSet.ParseStorageNetworkRule(NetworkRuleSet);
+            }
+            if (enableHierarchicalNamespace != null)
+            {
+                createParameters.IsHnsEnabled = enableHierarchicalNamespace;
             }
 
             var createAccountResponse = this.StorageClient.StorageAccounts.Create(

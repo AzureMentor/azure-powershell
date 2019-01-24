@@ -22,7 +22,7 @@ using System.Security.Permissions;
 
 namespace Microsoft.Azure.Commands.DataFactories
 {
-    [Cmdlet(VerbsCommon.Get, Constants.Run, DefaultParameterSetName = ByFactoryName), OutputType(typeof(List<PSDataSliceRun>))]
+    [Cmdlet("Get", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "DataFactoryRun", DefaultParameterSetName = ByFactoryName), OutputType(typeof(PSDataSliceRun))]
     public class GetAzureDataFactoryRunCommand : DataFactoryBaseCmdlet
     {
         [Parameter(ParameterSetName = ByFactoryObject, Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true,
@@ -42,7 +42,6 @@ namespace Microsoft.Azure.Commands.DataFactories
         [Parameter(Position = 3, Mandatory = true, HelpMessage = "The start time of the data slice queried.")]
         public DateTime StartDateTime { get; set; }
 
-        [EnvironmentPermission(SecurityAction.Demand, Unrestricted = true)]
         public override void ExecuteCmdlet()
         {
             if (ParameterSetName == ByFactoryObject)

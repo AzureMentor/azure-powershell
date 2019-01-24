@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: Microsoft.Azure.Commands.Batch.dll-Help.xml
 Module Name: AzureRM.Batch
 ms.assetid: A39A415A-B403-48D3-AF80-CF7CFE382577
@@ -40,7 +40,7 @@ The return value indicates that this subscription can create only one Batch acco
 The credentials, account, tenant, and subscription used for communication with azure.
 
 ```yaml
-Type: IAzureContextContainer
+Type: Microsoft.Azure.Commands.Common.Authentication.Abstractions.IAzureContextContainer
 Parameter Sets: (All)
 Aliases: AzureRmContext, AzureCredential
 
@@ -56,9 +56,9 @@ Specifies the region for which this cmdlet checks the quotas.
 For more information, see Azure Regions (https://azure.microsoft.com/regions).
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 
 Required: True
 Position: 0
@@ -72,8 +72,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
-This cmdlet does not accept any input.
+### System.String
 
 ## OUTPUTS
 
@@ -82,4 +81,3 @@ This cmdlet does not accept any input.
 ## NOTES
 
 ## RELATED LINKS
-

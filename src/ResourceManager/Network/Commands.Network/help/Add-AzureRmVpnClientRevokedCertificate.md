@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: Microsoft.Azure.Commands.Network.dll-Help.xml
 Module Name: AzureRM.Network
 ms.assetid: 90FB7B88-844E-4783-A10F-04D7BA47C030
@@ -40,7 +40,7 @@ In order to add the certificate, you must specify both the certificate name and 
 The credentials, account, tenant, and subscription used for communication with azure.
 
 ```yaml
-Type: IAzureContextContainer
+Type: Microsoft.Azure.Commands.Common.Authentication.Abstractions.IAzureContextContainer
 Parameter Sets: (All)
 Aliases: AzureRmContext, AzureCredential
 
@@ -53,13 +53,12 @@ Accept wildcard characters: False
 
 ### -ResourceGroupName
 Specifies the name of the resource group that the virtual network gateway is assigned to.
-
 Resource groups categorize items to help simplify inventory management and general Azure administration.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 
 Required: True
 Position: Named
@@ -71,17 +70,14 @@ Accept wildcard characters: False
 ### -Thumbprint
 Specifies the unique identifier of the certificate being added.
 For example:
-
 -Thumbprint "E3A38EBA60CAA1C162785A2E1C44A15AD450199C3"
-
 You can get thumbprint information for your certificates by using a Windows PowerShell command similar to this: `Get-ChildItem -Path Cert:\LocalMachine\Root`.
-
 The preceding command gets information for all the local computer certificates found in the root certificate store.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 
 Required: True
 Position: Named
@@ -94,9 +90,9 @@ Accept wildcard characters: False
 Specifies the name of the virtual network gateway where the certificate should be added.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 
 Required: True
 Position: Named
@@ -109,7 +105,7 @@ Accept wildcard characters: False
 Specifies the name of the VPN client certificate to be added.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
 Aliases: ResourceName
 
@@ -125,8 +121,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
-This cmdlet does not accept any input.
+### System.String
 
 ## OUTPUTS
 

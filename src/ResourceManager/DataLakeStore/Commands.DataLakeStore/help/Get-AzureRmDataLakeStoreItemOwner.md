@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: Microsoft.Azure.Commands.DataLakeStore.dll-Help.xml
 Module Name: AzureRM.DataLakeStore
 ms.assetid: 335588D4-4D2C-4DBD-B6B2-B1227C4AF9A9
@@ -36,7 +36,7 @@ This command gets the user owner for the root directory of the ContosoADL accoun
 Specifies the name of the Data Lake Store account.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
 Aliases: AccountName
 
@@ -51,7 +51,7 @@ Accept wildcard characters: False
 The credentials, account, tenant, and subscription used for communication with azure.
 
 ```yaml
-Type: IAzureContextContainer
+Type: Microsoft.Azure.Commands.Common.Authentication.Abstractions.IAzureContextContainer
 Parameter Sets: (All)
 Aliases: AzureRmContext, AzureCredential
 
@@ -66,9 +66,9 @@ Accept wildcard characters: False
 Specifies the Data Lake Store path of an item, starting with the root directory (/).
 
 ```yaml
-Type: DataLakeStorePathInstance
+Type: Microsoft.Azure.Commands.DataLakeStore.Models.DataLakeStorePathInstance
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 
 Required: True
 Position: 1
@@ -82,9 +82,9 @@ Specifies the type of owner to get.
 The acceptable values for this parameter are: User and Group.
 
 ```yaml
-Type: Owner
+Type: Microsoft.Azure.Commands.DataLakeStore.Models.DataLakeStoreEnums+Owner
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 Accepted values: User, Group
 
 Required: True
@@ -99,12 +99,15 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
-This cmdlet does not accept any input.
+### System.String
+
+### Microsoft.Azure.Commands.DataLakeStore.Models.DataLakeStorePathInstance
+
+### Microsoft.Azure.Commands.DataLakeStore.Models.DataLakeStoreEnums+Owner
 
 ## OUTPUTS
 
-### string
+### System.String
 The owner of the specified item.
 
 ## NOTES

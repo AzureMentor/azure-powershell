@@ -12,6 +12,7 @@
 // limitations under the License.
 // ----------------------------------------------------------------------------------
 
+// TODO: Remove IfDef
 #if NETSTANDARD
 using Microsoft.Azure.Graph.RBAC.Version1_6.ActiveDirectory;
 #else
@@ -21,8 +22,8 @@ using Microsoft.Azure.Commands.ResourceManager.Common.Tags;
 using Microsoft.Azure.Management.Internal.Resources.Utilities.Models;
 using Microsoft.Azure.Management.KeyVault.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
-
 
 namespace Microsoft.Azure.Commands.KeyVault.Models
 {
@@ -44,11 +45,13 @@ namespace Microsoft.Azure.Commands.KeyVault.Models
             TenantId = vault.Properties.TenantId;
             TenantName = vaultTenantDisplayName;
             VaultUri = vault.Properties.VaultUri;
-            EnabledForDeployment = vault.Properties.EnabledForDeployment.HasValue ? vault.Properties.EnabledForDeployment.Value : false;
+            EnabledForDeployment = vault.Properties.EnabledForDeployment ?? false;
             EnabledForTemplateDeployment = vault.Properties.EnabledForTemplateDeployment;
             EnabledForDiskEncryption = vault.Properties.EnabledForDiskEncryption;
             EnableSoftDelete = vault.Properties.EnableSoftDelete;
+            EnablePurgeProtection = vault.Properties.EnablePurgeProtection;
             AccessPolicies = vault.Properties.AccessPolicies.Select(s => new PSKeyVaultAccessPolicy(s, adClient)).ToArray();
+            NetworkAcls = InitNetworkRuleSet(vault.Properties);
             OriginalVault = vault;
         }
         public string VaultUri { get; private set; }
@@ -67,12 +70,56 @@ namespace Microsoft.Azure.Commands.KeyVault.Models
 
         public bool? EnableSoftDelete { get; private set; }
 
+        public bool? EnablePurgeProtection { get; private set; }
+
         public PSKeyVaultAccessPolicy[] AccessPolicies { get; private set; }
 
         public string AccessPoliciesText { get { return ModelExtensions.ConstructAccessPoliciesList(AccessPolicies); } }
 
+        public PSKeyVaultNetworkRuleSet NetworkAcls { get; private set; }
+
+        public string NetworkAclsText { get { return ModelExtensions.ConstructNetworkRuleSet(NetworkAcls); } }
+
         //If we got this vault from the server, save the over-the-wire version, to 
         //allow easy updates
         public Vault OriginalVault { get; private set; }
+
+        private static PSKeyVaultNetworkRuleSet InitNetworkRuleSet(VaultProperties properties)
+        {
+            // The service will return NULL when NetworkAcls is never set before or set with default property values
+            // The default constructor will set default property values in SDK's NetworkRuleSet class
+            if (properties?.NetworkAcls == null)
+            {
+                return new PSKeyVaultNetworkRuleSet();
+            }
+
+            var networkAcls = properties.NetworkAcls;
+
+            PSKeyVaultNetworkRuleDefaultActionEnum defaultAct;
+            if (!Enum.TryParse(networkAcls.DefaultAction, true, out defaultAct))
+            {
+                defaultAct = PSKeyVaultNetworkRuleDefaultActionEnum.Allow;
+            }
+
+            PSKeyVaultNetworkRuleBypassEnum bypass;
+            if (!Enum.TryParse(networkAcls.Bypass, true, out bypass))
+            {
+                bypass = PSKeyVaultNetworkRuleBypassEnum.AzureServices;
+            }
+
+            IList <string> allowedIpAddresses = null;
+            if (networkAcls.IpRules != null && networkAcls.IpRules.Count > 0)
+            {
+                allowedIpAddresses = networkAcls.IpRules.Select(item => item.Value).ToList();
+            }
+
+            IList<string> allowedVirtualNetworkResourceIds = null;
+            if (networkAcls.VirtualNetworkRules != null && networkAcls.VirtualNetworkRules.Count > 0)
+            {
+                allowedVirtualNetworkResourceIds = networkAcls.VirtualNetworkRules.Select(item => item.Id).ToList();
+            }
+
+            return new PSKeyVaultNetworkRuleSet(defaultAct, bypass, allowedIpAddresses, allowedVirtualNetworkResourceIds);
+        }
     }
 }

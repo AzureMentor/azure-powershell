@@ -1,7 +1,7 @@
-﻿---
+---
 Module Name: AzureRM.DataLakeStore
 Module Guid: 90dfd814-abce-4e1f-99b6-fe16760c079a
-Download Help Link: None
+Download Help Link: https://docs.microsoft.com/en-us/powershell/module/azurerm.datalakestore
 Help Version: 1.0.0.0
 Locale: en-US
 ---
@@ -20,8 +20,14 @@ Adds content to an item in a Data Lake Store.
 ### [Add-AzureRmDataLakeStoreTrustedIdProvider](Add-AzureRmDataLakeStoreTrustedIdProvider.md)
 Adds a trusted identity provider to the specified Data Lake Store account.
 
+### [Add-AzureRmDataLakeStoreVirtualNetworkRule](Add-AzureRmDataLakeStoreVirtualNetworkRule.md)
+Adds a virtual network rule to the specified Data Lake Store account.
+
 ### [Enable-AzureRmDataLakeStoreKeyVault](Enable-AzureRmDataLakeStoreKeyVault.md)
 Attempts to enable a user managed Key Vault for encryption of the specified Data Lake Store account.
+
+### [Export-AzureRmDataLakeStoreChildItemProperties](Export-AzureRmDataLakeStoreChildItemProperties.md)
+Exports the properties (Disk usage and Acl) for the entire tree from the specified path to a ouput path
 
 ### [Export-AzureRmDataLakeStoreItem](Export-AzureRmDataLakeStoreItem.md)
 Downloads a file from Data Lake Store.
@@ -31,6 +37,9 @@ Gets details of a Data Lake Store account.
 
 ### [Get-AzureRmDataLakeStoreChildItem](Get-AzureRmDataLakeStoreChildItem.md)
 Gets the list of items in a folder in Data Lake Store.
+
+### [Get-AzureRmDataLakeStoreChildItemSummary](Get-AzureRmDataLakeStoreChildItemSummary.md)
+Gets the summary of total size, files and directories contained in the path specified
 
 ### [Get-AzureRmDataLakeStoreFirewallRule](Get-AzureRmDataLakeStoreFirewallRule.md)
 Gets the specified firewall rules in the specified Data Lake Store.
@@ -54,6 +63,10 @@ Gets the permission octal of a file or folder in Data Lake Store.
 ### [Get-AzureRmDataLakeStoreTrustedIdProvider](Get-AzureRmDataLakeStoreTrustedIdProvider.md)
 Gets the specified trusted identity provider in the specified Data Lake Store.
 If no provider is specified, then lists all providers for the account.
+
+### [Get-AzureRmDataLakeStoreVirtualNetworkRule](Get-AzureRmDataLakeStoreVirtualNetworkRule.md)
+Gets the specified virtual network rules in the specified Data Lake Store.
+If no virtual network rule is specified, then lists all virtual network rules for the account.
 
 ### [Import-AzureRmDataLakeStoreItem](Import-AzureRmDataLakeStoreItem.md)
 Uploads a local file or directory to a Data Lake Store.
@@ -88,6 +101,9 @@ Removes an entry from the ACL of a file or folder in Data Lake Store.
 ### [Remove-AzureRmDataLakeStoreTrustedIdProvider](Remove-AzureRmDataLakeStoreTrustedIdProvider.md)
 Removes the specified trusted identity provider in the specified Data Lake Store.
 
+### [Remove-AzureRmDataLakeStoreVirtualNetworkRule](Remove-AzureRmDataLakeStoreVirtualNetworkRule.md)
+Removes the specified virtual network rule in the specified Data Lake Store.
+
 ### [Set-AzureRmDataLakeStoreAccount](Set-AzureRmDataLakeStoreAccount.md)
 Modifies a Data Lake Store account.
 
@@ -111,6 +127,9 @@ Modifies the permission octal of a file or folder in Data Lake Store.
 
 ### [Set-AzureRmDataLakeStoreTrustedIdProvider](Set-AzureRmDataLakeStoreTrustedIdProvider.md)
 Modifies the specified trusted identity provider in the specified Data Lake Store.
+
+### [Set-AzureRmDataLakeStoreVirtualNetworkRule](Set-AzureRmDataLakeStoreVirtualNetworkRule.md)
+Modifies the specified virtual network rule in the specified Data Lake Store.
 
 ### [Test-AzureRmDataLakeStoreAccount](Test-AzureRmDataLakeStoreAccount.md)
 Tests the existence of a Data Lake Store account.

@@ -40,7 +40,7 @@ The Azure PowerShell Developer Guide was created to help with the development an
 - [After Development](#after-development)
 - [Misc](#misc)
     - [Publish to PowerShell Gallery](#publish-to-powershell-gallery)
-    - [AsJob Parameters](#asjob-parameters)
+    - [AsJob Parameter](#asjob-parameter)
     - [Argument Completers](#argument-completers)
         - [Resource Group Completer](#resource-group-completers)
         - [Location Completer](#location-completer)
@@ -50,14 +50,18 @@ The Azure PowerShell Developer Guide was created to help with the development an
 
 The following prerequisites should be completed before contributing to the Azure PowerShell repository:
 
-- Install [Visual Studio 2015](https://www.visualstudio.com/downloads/)
+- Install [Visual Studio 2017](https://www.visualstudio.com/downloads/)
 - Install the latest version of [Git](https://git-scm.com/downloads)
-- Install the latest version of [WiX](http://wixtoolset.org/releases/)
-    - After installation, ensure that the path to "WiX Toolset\bin" has been added to your `PATH` environment variable
-- Install the [`platyPS` module](https://github.com/Azure/azure-powershell/blob/preview/documentation/help-generation.md#installing-platyps)
+- Install the [`platyPS` module](https://github.com/Azure/azure-powershell/blob/preview/documentation/development-docs/help-generation.md#installing-platyps)
 - Set the PowerShell [execution policy](https://technet.microsoft.com/en-us/library/ee176961.aspx) to **Unrestricted** for the following versions of PowerShell:
     - `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe`
     - `C:\Windows\SysWOW64\WindowsPowerShell\v1.0\powershell.exe`
+    
+**Note** The PowerShell Build requires the 64-bit version of MSBuild that ships with visual studio, so ensure that this version is the first version in your cmd path.  64-bit MSBuild could be installed in a couple of places on your machine:
+- ```%programfiles%\MSBuild\14.0\bin```
+- ```%programfiles(x86)%\MSBuild\14.0\bin\amd64```
+
+The MSBuild version in ```%windir%\Microsoft.Net\Framework\v4.0.30319``` **cannot** be used with the build.
     
 # Environment Setup
 
@@ -116,8 +120,6 @@ By default, we build the `dll-Help.xml` files (used to display the help content 
 msbuild build.proj /p:SkipHelp=true
 ```
 
-_Note_: when [updating the installer](#updating-the-installer), you **should not** skip the help generation step, as it removes the `dll-Help.xml` files from the wxi file.
-
 ## Running Tests
 
 With the same terminal open from the previous section, run the cmdlet `Invoke-CheckinTests` to run all of the tests in the project
@@ -142,10 +144,9 @@ Before development, you must meet with the Azure PowerShell team to have a desig
 
 Before submitting a design review, please be sure that you have read the [Azure PowerShell Design Guidelines](./azure-powershell-design-guidelines.md) document.
 
-Please email the **azdevxpsdr** alias to set up this review and include the following information:
-- Short description of the top-level scenarios
-- Proposed cmdlet syntax
-- Sample output of cmdlets
+Please submit a design review here: https://github.com/Azure/azure-powershell-cmdlet-review-pr
+
+_Note_: You will need to be part of the GitHub Azure org to see this repository.  Please go to [this link](aka.ms/azuregithub) to become part of the Azure org.
 
 We recommend using the `platyPS` module to easily generate markdown files that contains the above information and including the files in the email.
 
@@ -246,6 +247,8 @@ To import modules automatically when debug has started, follow the below steps:
 - In the **Debug** tab mentioned previously, go to **Start Options**
 - Import the Profile module, along with the module you are testing, by pasting the following in the **Command line arguments** box (_note_: you have to update the <PATH_TO_REPO> and <SERVICE> values provided below):
     - `-NoExit -Command "Import-Module <PATH_TO_REPO>/src/Package/Debug/ResourceManager/AzureResourceManager/AzureRM.Profile/AzureRM.Profile.psd1;Import-Module <PATH_TO_REPO>/src/Package/Debug/ResourceManager/AzureResourceManager/AzureRM.<SERVICE>/AzureRM.<SERVICE>.psd1;$VerbosePreference='Continue'"`
+    
+- **Note**: if you do not see all of the changes you made to the cmdlets when importing your module in a PowerShell session (_e.g.,_ a cmdlet you added is not recognized as a cmdlet), you may need to delete any existing Azure PowerShell modules that you have on your machine (installed either through the PowerShell Gallery or by Web Platform Installer) before you import your module.
 
 ## Adding Help Content
 
@@ -359,7 +362,7 @@ Create these environment variables for the AD scenario tests:
 ### Recording/Running Tests 
 
 - Set up environment variables using New-TestCredential as described [here](../testing-docs/using-azure-test-framework.md#new-testcredential)
-- [Run the test](#running-tests) and make sure you got a generated JSON file that matches the test name in the bin folder under the `SessionRecords` folder
+- Run the test in Visual Studio in the Test Explorer window and make sure you got a generated JSON file that matches the test name in the bin folder under the `SessionRecords` folder
 - Copy this `SessionRecords` folder and place it inside the test project
     - Inside Visual Studio, add all of the generated JSON files, making sure to change the "Copy to Output Directory" property for each one to "Copy if newer"
     -  Make sure that all of these JSON files appear in your `Commands.SERVICE.Test.csproj` file
@@ -410,6 +413,22 @@ using Microsoft.Azure.Commands.ResourceManager.Common.ArgumentCompleters;
 [Parameter(Mandatory = false, HelpMessage = "The resource group name")]
 [ResourceGroupCompleter]
 public string ResourceGroupName { get; set; }
+```
+
+### Resource Name Completer
+
+For any parameter that takes a resource name, the `ResourceNameCompleter` should be applied as an attribute.  This will allow the user to tab through all resource names for the ResourceType in the current subscription.  This completer will filter based upon the current parent resources provided (for instance, if ResourceGroupName is provided, only the resources in that particular resource group will be returned).  For this completer, please provide the ResourceType as the first argument, followed by the parameter name for all parent resources starting at the top level.
+
+```cs
+using Microsoft.Azure.Commands.ResourceManager.Common.ArgumentCompleters;
+...
+[Parameter(Mandatory = false, HelpMessage = "The parent server name")]
+[ResourceNameCompleter("Microsoft.Sql/servers", nameof(ResourceGroupName))]
+public string ServerName { get; set; }
+
+[Parameter(Mandatory = false, HelpMessage = "The database name")]
+[ResourceNameCompleter("Microsoft.Sql/servers/databases", nameof(ResourceGroupName), nameof(ServerName))]
+public string Name { get; set; }
 ```
 
 ### Location Completer

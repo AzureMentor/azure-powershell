@@ -20,28 +20,6 @@ namespace Microsoft.Azure.Commands.Common.Strategies.WebApps
 {
     static class ServerFarmStrategy
     {
-#if !NETSTANDARD
-        public static ResourceStrategy<ServerFarmWithRichSku> Strategy { get; } = AppServicePolicy.Create(
-            provider: "serverFarms",
-            getOperations: client => client.ServerFarms,
-            getAsync: (o, p) => o.GetServerFarmAsync(p.ResourceGroupName, p.Name, p.CancellationToken),
-            createOrUpdateAsync: (o, p) => o.CreateOrUpdateServerFarmAsync(p.ResourceGroupName, p.Name, p.Model, cancellationToken: p.CancellationToken),
-            createTime: _ => 5,
-            compulsoryLocation: true);
-
-        public static ResourceConfig<ServerFarmWithRichSku> CreateServerFarmConfig(
-            this ResourceConfig<ResourceGroup> resourceGroup,
-            string resourceGroupName,
-            string name) => Strategy.CreateResourceConfig(
-                resourceGroup,
-                name,
-                createModel: _ => 
-                    new ServerFarmWithRichSku
-                    {
-                        Name = name,
-                        Sku = new SkuDescription {Tier = "Basic", Capacity = 1, Name = CmdletHelpers.GetSkuName("Basic", 1) }
-                    });
-#else
         public static ResourceStrategy<AppServicePlan> Strategy { get; } = AppServicePolicy.Create(
             provider: "serverFarms",
             getOperations: client => client.AppServicePlans,
@@ -53,16 +31,17 @@ namespace Microsoft.Azure.Commands.Common.Strategies.WebApps
         public static ResourceConfig<AppServicePlan> CreateServerFarmConfig(
             this ResourceConfig<ResourceGroup> resourceGroup,
             string resourceGroupName,
-            string name) => Strategy.CreateResourceConfig(
+            string name, bool isXenon = false ) => Strategy.CreateResourceConfig(
                 resourceGroup,
                 name,
-                createModel: _ =>
-                    new AppServicePlan
-                    {
-                        Name = name,
-                        Sku = new SkuDescription { Tier = "Basic", Capacity = 1, Name = CmdletHelpers.GetSkuName("Basic", 1) }
-                    });
-
-#endif
+                createModel: _ => 
+				{
+					string tier = isXenon ? "PremiumContainer" : "Basic";
+					return new AppServicePlan(location: null, name: name)
+					{
+						Sku = new SkuDescription { Tier = tier, Capacity = 1, Name = CmdletHelpers.GetSkuName(tier, 1) },
+						IsXenon = isXenon
+					};
+				});
     }
 }

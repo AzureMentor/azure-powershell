@@ -25,19 +25,27 @@ Get-AzureKeyVaultCertificateIssuer [-InputObject] <PSKeyVault> [[-Name] <String>
  [-DefaultProfile <IAzureContextContainer>] [<CommonParameters>]
 ```
 
+### ByResourceId
+```
+Get-AzureKeyVaultCertificateIssuer [-ResourceId] <String> [[-Name] <String>]
+ [-DefaultProfile <IAzureContextContainer>] [<CommonParameters>]
+```
+
 ## DESCRIPTION
 The **Get-AzureKeyVaultCertificateIssuer** cmdlet gets a specified certificate issuer or all certificate issuers for a key vault in Azure Key Vault.
 
 ## EXAMPLES
 
 ### Example 1: Get a certificate issuer
-```
-PS C:\>Get-AzureKeyVaultCertificateIssuer -VaultName "Contosokv01" -Name "TestIssuer01"
+```powershell
+PS C:\> Get-AzureKeyVaultCertificateIssuer -VaultName "Contosokv01" -Name "TestIssuer01"
+
+AccountId           : 555
+ApiKey              :
+OrganizationDetails : Microsoft.Azure.Commands.KeyVault.Models.PSKeyVaultCertificateOrganizationDetails
 Name                : TestIssuer01
 IssuerProvider      : Test
-AccountId           : 555
-ApiKey              : 
-OrganizationDetails : Microsoft.Azure.Commands.KeyVault.Models.KeyVaultCertificateOrganizationDetails
+VaultName           : Contosokv01
 ```
 
 This command gets the certificate issuer named TestIssuer01.
@@ -48,7 +56,7 @@ This command gets the certificate issuer named TestIssuer01.
 The credentials, account, tenant, and subscription used for communication with azure
 
 ```yaml
-Type: IAzureContextContainer
+Type: Microsoft.Azure.Commands.Common.Authentication.Abstractions.IAzureContextContainer
 Parameter Sets: (All)
 Aliases: AzureRmContext, AzureCredential
 
@@ -63,7 +71,7 @@ Accept wildcard characters: False
 KeyVault object.
 
 ```yaml
-Type: PSKeyVault
+Type: Microsoft.Azure.Commands.KeyVault.Models.PSKeyVault
 Parameter Sets: ByInputObject
 Aliases:
 
@@ -78,23 +86,23 @@ Accept wildcard characters: False
 Specifies the name of the certificate issuer to get.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
 Aliases: IssuerName
 
 Required: False
 Position: 1
 Default value: None
-Accept pipeline input: True (ByPropertyName)
+Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -VaultName
-Specifies the name of a key vault.
+### -ResourceId
+KeyVault Resource Id.
 
 ```yaml
-Type: String
-Parameter Sets: ByName
+Type: System.String
+Parameter Sets: ByResourceId
 Aliases:
 
 Required: True
@@ -104,17 +112,36 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
+### -VaultName
+Specifies the name of a key vault.
+
+```yaml
+Type: System.String
+Parameter Sets: ByName
+Aliases:
+
+Required: True
+Position: 0
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
-### None
-This cmdlet does not accept any input.
+### Microsoft.Azure.Commands.KeyVault.Models.PSKeyVault
+Parameters: InputObject (ByValue)
+
+### System.String
 
 ## OUTPUTS
 
-### List<Microsoft.Azure.Commands.KeyVault.Models.PSKeyVaultCertificateIssuerIdentityItem>, Microsoft.Azure.Commands.KeyVault.Models.PSKeyVaultCertificateIssuer
+### Microsoft.Azure.Commands.KeyVault.Models.PSKeyVaultCertificateIssuerIdentityItem
+
+### Microsoft.Azure.Commands.KeyVault.Models.PSKeyVaultCertificateIssuer
 
 ## NOTES
 

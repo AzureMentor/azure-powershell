@@ -13,6 +13,10 @@
 // ----------------------------------------------------------------------------------
 
 using Microsoft.Azure.Commands.Common.Authentication;
+// TODO: Remove IfDef
+#if NETSTANDARD
+using Microsoft.Azure.Commands.Common.Authentication.Core;
+#endif
 using Microsoft.Azure.Commands.Common.Authentication.Models;
 using Microsoft.Azure.ServiceManagemenet.Common.Models;
 using Microsoft.WindowsAzure.Commands.Common.Test.Mocks;
@@ -83,7 +87,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Profile.Test
                 Assert.Equal(typeof(AuthenticationStoreTokenCache), session.TokenCache.GetType());
                 Assert.NotNull(AzureRmProfileProvider.Instance);
                 Assert.Equal(typeof(ResourceManagerProfileProvider), AzureRmProfileProvider.Instance.GetType());
-                store.Verify(f => f.WriteFile(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+                store.Verify(f => f.WriteFile(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
             }
             finally
             {

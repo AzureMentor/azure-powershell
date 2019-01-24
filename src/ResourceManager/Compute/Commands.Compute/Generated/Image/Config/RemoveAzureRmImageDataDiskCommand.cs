@@ -29,7 +29,7 @@ using System.Management.Automation;
 
 namespace Microsoft.Azure.Commands.Compute.Automation
 {
-    [Cmdlet("Remove", "AzureRmImageDataDisk", SupportsShouldProcess = true)]
+    [Cmdlet(VerbsCommon.Remove, ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "ImageDataDisk", SupportsShouldProcess = true)]
     [OutputType(typeof(PSImage))]
     public partial class RemoveAzureRmImageDataDiskCommand : Microsoft.Azure.Commands.ResourceManager.Common.AzureRMCmdlet
     {
@@ -49,9 +49,6 @@ namespace Microsoft.Azure.Commands.Compute.Automation
 
         protected override void ProcessRecord()
         {
-            WriteWarning("Remove-AzureRmImageDataDisk: A property of the output of this cmdlet will change in an upcoming breaking change release. " +
-                         "The StorageAccountType property for a DataDisk will return Standard_LRS and Premium_LRS");
-
             // StorageProfile
             if (this.Image.StorageProfile == null)
             {
@@ -83,4 +80,3 @@ namespace Microsoft.Azure.Commands.Compute.Automation
         }
     }
 }
-

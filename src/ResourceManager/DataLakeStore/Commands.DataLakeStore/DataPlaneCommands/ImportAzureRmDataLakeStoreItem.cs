@@ -21,7 +21,7 @@ using Microsoft.Rest.Azure;
 
 namespace Microsoft.Azure.Commands.DataLakeStore
 {
-    [Cmdlet(VerbsData.Import, "AzureRmDataLakeStoreItem", SupportsShouldProcess = true, DefaultParameterSetName = BaseParameterSetName), OutputType(typeof(string))]
+    [Cmdlet("Import", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "DataLakeStoreItem", SupportsShouldProcess = true, DefaultParameterSetName = BaseParameterSetName), OutputType(typeof(string))]
     [Alias("Import-AdlStoreItem")]
     public class ImportAzureDataLakeStoreItem : DataLakeStoreFileSystemCmdletBase
     {
@@ -87,25 +87,6 @@ namespace Microsoft.Azure.Commands.DataLakeStore
             ParameterSetName = DiagnosticParameterSetName)]
         public SwitchParameter ForceBinary { get; set; }
 
-        [Obsolete("Parameter PerFileThreadCount of ImportAzureRmDataLakeStoreItem is deprecated. This parameter will be removed in future releases. Please use Concurrency parameter instead.")]
-        [Parameter(ValueFromPipelineByPropertyName = true, Position = 6, Mandatory = false,
-            HelpMessage =
-                "Indicates the maximum number of threads to use per file.  Default will be computed as a best effort based on folder and file size",
-            ParameterSetName = BaseParameterSetName)]
-        [Parameter(ValueFromPipelineByPropertyName = true, Position = 6, Mandatory = false,
-            HelpMessage = "Indicates the maximum number of threads to use per file.  Default will be computed as a best effort based on folder and file size",
-            ParameterSetName = DiagnosticParameterSetName)]
-        public int PerFileThreadCount { get; set; } = -1;
-
-        [Obsolete("Parameter ConcurrentFileCount of ImportAzureRmDataLakeStoreItem is deprecated. This parameter will be removed in future releases. Please use Concurrency parameter instead.")]
-        [Parameter(ValueFromPipelineByPropertyName = true, Position = 7, Mandatory = false,
-            HelpMessage = "Indicates the maximum number of files to upload in parallel for a folder upload.  Default will be computed as a best effort based on folder and file size",
-            ParameterSetName = BaseParameterSetName)]
-        [Parameter(ValueFromPipelineByPropertyName = true, Position = 7, Mandatory = false,
-            HelpMessage = "Indicates the maximum number of files to upload in parallel for a folder upload.  Default will be computed as a best effort based on folder and file size",
-            ParameterSetName = DiagnosticParameterSetName)]
-        public int ConcurrentFileCount { get; set; } = -1;
-
         [Parameter(ValueFromPipelineByPropertyName = true, Position = 8, Mandatory = false,
             HelpMessage = "Indicates that, if the file or folder exists, it should be overwritten",
             ParameterSetName = BaseParameterSetName)]
@@ -137,15 +118,7 @@ namespace Microsoft.Azure.Commands.DataLakeStore
 
         public override void ExecuteCmdlet()
         {
-            if (ConcurrentFileCount != -1)
-            {
-                WriteWarning(Resources.IncorrectConcurrentFileCountWarning);
-            }
-            if (PerFileThreadCount != -1)
-            {
-                WriteWarning(Resources.IncorrectPerFileThreadCountWarning);
-            }
-            var powerShellSourcePath = SessionState.Path.GetUnresolvedProviderPathFromPSPath(Path);
+            var powerShellSourcePath = ResolveUserPath(Path);
             ConfirmAction(
                 Resources.UploadFileMessage,
                 Destination.TransformedPath,
@@ -155,29 +128,13 @@ namespace Microsoft.Azure.Commands.DataLakeStore
                     {
                         if (ParameterSetName.Equals(DiagnosticParameterSetName) && DiagnosticLogLevel != LogLevel.None)
                         {
-                            var diagnosticPath =
-                                SessionState.Path.GetUnresolvedProviderPathFromPSPath(DiagnosticLogPath);
+                            var diagnosticPath = ResolveUserPath(DiagnosticLogPath);
                             DataLakeStoreFileSystemClient.SetupFileLogging(DiagnosticLogLevel, diagnosticPath);
                         }
 
-                        int threadCount;
-                        // If concurrency is specified then accept that
-                        if (Concurrency > 0)
-                        {
-                            threadCount = Concurrency;
-                        }
-                        else if (ConcurrentFileCount > 0 && PerFileThreadCount <= 0)
-                        {
-                            threadCount = ConcurrentFileCount;
-                        }
-                        else if (ConcurrentFileCount <= 0 && PerFileThreadCount > 0)
-                        {
-                            threadCount = PerFileThreadCount;
-                        }
-                        else
-                        {
-                            threadCount = Math.Min(PerFileThreadCount * ConcurrentFileCount, DataLakeStoreFileSystemClient.ImportExportMaxThreads);
-                        }
+                        // Currently SDK default thread calculation is not correct, so pass a default thread count
+                        int threadCount = Concurrency == -1 ? DataLakeStoreFileSystemClient.ImportExportMaxThreads : Concurrency;
+
                         DataLakeStoreFileSystemClient.BulkCopy(Destination.TransformedPath, Account,
                             powerShellSourcePath, CmdletCancellationToken, threadCount, Recurse, Force, Resume, false, this, ForceBinary);
                         // only attempt to write output if this cmdlet hasn't been cancelled.

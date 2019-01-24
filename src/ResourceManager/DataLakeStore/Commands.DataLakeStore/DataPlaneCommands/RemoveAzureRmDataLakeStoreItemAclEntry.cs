@@ -1,4 +1,4 @@
-// ----------------------------------------------------------------------------------
+﻿// ----------------------------------------------------------------------------------
 //
 // Copyright Microsoft Corporation
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,12 +19,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
 using Microsoft.Azure.DataLake.Store.Acl;
+using Microsoft.Azure.DataLake.Store.AclTools;
 
 namespace Microsoft.Azure.Commands.DataLakeStore
 {
-    [Cmdlet(VerbsCommon.Remove, "AzureRmDataLakeStoreItemAclEntry", SupportsShouldProcess = true,
-         DefaultParameterSetName = BaseParameterSetName),
-     OutputType(typeof(bool))]
+    [Cmdlet("Remove", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "DataLakeStoreItemAclEntry", SupportsShouldProcess = true,DefaultParameterSetName = BaseParameterSetName),OutputType(typeof(bool))]
     [Alias("Remove-AdlStoreItemAclEntry")]
     public class RemoveAzureDataLakeStoreItemAclEntry : DataLakeStoreFileSystemCmdletBase
     {
@@ -84,6 +83,20 @@ namespace Microsoft.Azure.Commands.DataLakeStore
         )]
         public SwitchParameter PassThru { get; set; }
 
+        [Parameter(ValueFromPipelineByPropertyName = true,  Mandatory = false, HelpMessage = "Indicates the ACL to be removed recursively to the child subdirectories and files")]
+        public SwitchParameter Recurse { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true, Mandatory = false,
+            HelpMessage =
+                "Number of files/directories processed in parallel. Optional: a reasonable default will be selected"
+        )]
+        public int Concurrency { get; set; } = -1;
+
+        [Parameter(Mandatory = false, HelpMessage =
+                "If passed then progress status is showed. Only applicable when recursive Acl remove is done."
+        )]
+        public SwitchParameter ShowProgress { get; set; }
+
         public override void ExecuteCmdlet()
         {
             var aclSpec = ParameterSetName.Equals(BaseParameterSetName)
@@ -95,7 +108,19 @@ namespace Microsoft.Azure.Commands.DataLakeStore
                 Path.OriginalPath,
                 () =>
                 {
-                    DataLakeStoreFileSystemClient.RemoveAclEntries(Path.TransformedPath, Account, aclSpec);
+                    if (Recurse)
+                    {
+                        // Currently SDK default thread calculation is not correct, so pass a default thread count
+                        int threadCount = Concurrency == -1 ? DataLakeStoreFileSystemClient.ImportExportMaxThreads : Concurrency;
+
+                        DataLakeStoreFileSystemClient.ChangeAclRecursively(Path.TransformedPath,
+                            Account, aclSpec, RequestedAclType.RemoveAcl, threadCount, this, ShowProgress, CmdletCancellationToken);
+                    }
+                    else
+                    {
+                        DataLakeStoreFileSystemClient.RemoveAclEntries(Path.TransformedPath, Account, aclSpec);
+                    }
+
                     if (PassThru)
                     {
                         WriteObject(true);

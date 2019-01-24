@@ -16,7 +16,7 @@ Gets a certificate from a key vault.
 ### ByName (Default)
 ```
 Get-AzureKeyVaultCertificate [-VaultName] <String> [[-Name] <String>] [-InRemovedState]
- [-DefaultProfile <IAzureContextContainer>] [<CommonParameters>]
+ [-IncludePending] [-DefaultProfile <IAzureContextContainer>] [<CommonParameters>]
 ```
 
 ### ByCertificateNameAndVersion
@@ -34,7 +34,7 @@ Get-AzureKeyVaultCertificate [-VaultName] <String> [-Name] <String> [-IncludeVer
 ### ByNameInputObject
 ```
 Get-AzureKeyVaultCertificate [-InputObject] <PSKeyVault> [[-Name] <String>] [-InRemovedState]
- [-DefaultProfile <IAzureContextContainer>] [<CommonParameters>]
+ [-IncludePending] [-DefaultProfile <IAzureContextContainer>] [<CommonParameters>]
 ```
 
 ### ByCertificateNameAndVersionInputObject
@@ -49,14 +49,32 @@ Get-AzureKeyVaultCertificate [-InputObject] <PSKeyVault> [-Name] <String> [-Incl
  [-DefaultProfile <IAzureContextContainer>] [<CommonParameters>]
 ```
 
+### ByNameResourceId
+```
+Get-AzureKeyVaultCertificate [-ResourceId] <String> [[-Name] <String>] [-InRemovedState]
+ [-IncludePending] [-DefaultProfile <IAzureContextContainer>] [<CommonParameters>]
+```
+
+### ByCertificateNameAndVersionResourceId
+```
+Get-AzureKeyVaultCertificate [-ResourceId] <String> [-Name] <String> [-Version] <String>
+ [-DefaultProfile <IAzureContextContainer>] [<CommonParameters>]
+```
+
+### ByCertificateAllVersionsResourceId
+```
+Get-AzureKeyVaultCertificate [-ResourceId] <String> [-Name] <String> [-IncludeVersions]
+ [-DefaultProfile <IAzureContextContainer>] [<CommonParameters>]
+```
+
 ## DESCRIPTION
 The **Get-AzureKeyVaultCertificate** cmdlet gets the specified certificate or the versions of a certificate from a key vault in Azure Key Vault.
 
 ## EXAMPLES
 
 ### Example 1: Get a certificate
-```
-PS C:\>Get-AzureKeyVaultCertificate -VaultName "ContosoKV01" -Name "TestCert01"
+```powershell
+PS C:\> Get-AzureKeyVaultCertificate -VaultName "ContosoKV01" -Name "TestCert01"
 Name        : testCert01
 Certificate : [Subject] 
                 CN=contoso.com
@@ -65,7 +83,7 @@ Certificate : [Subject]
                 CN=contoso.com
 
               [Serial Number] 
-                05979C5A2F0741D5A3B6F97673E8A118
+                XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
               [Not Before] 
                 2/8/2016 3:11:45 PM
@@ -74,9 +92,9 @@ Certificate : [Subject]
                 8/8/2016 4:21:45 PM
 
               [Thumbprint] 
-                3E9B6848AD1834284157D68B060F748037F663C8
+                XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-Thumbprint  : 3E9B6848AD1834284157D68B060F748037F663C8
+Thumbprint  : XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 Tags        : 
 Enabled     : True
 Created     : 2/8/2016 11:21:45 PM
@@ -86,15 +104,75 @@ Updated     : 2/8/2016 11:21:45 PM
 This command gets the certificate named TestCert01 from the key vault named ContosoKV01.
 
 ### Example 2: Get all the certificates that have been deleted but not purged for this key vault.
-```
-PS C:\>Get-AzureKeyVaultCertificate -VaultName 'Contoso' -InRemovedState
+```powershell
+PS C:\> Get-AzureKeyVaultCertificate -VaultName 'contoso' -InRemovedState
+
+DeletedDate        : 5/24/2018 6:08:32 PM
+Enabled            : True
+Expires            : 11/24/2018 6:08:13 PM
+NotBefore          : 5/24/2018 5:58:13 PM
+Created            : 5/24/2018 6:08:13 PM
+Updated            : 5/24/2018 6:08:13 PM
+Tags               :
+VaultName          : contoso
+Name               : test1
+Version            :
+Id                 : https://contoso.vault.azure.net:443/certificates/test1
+
+ScheduledPurgeDate : 8/22/2018 6:10:47 PM
+DeletedDate        : 5/24/2018 6:10:47 PM
+Enabled            : True
+Expires            : 11/24/2018 6:09:44 PM
+NotBefore          : 5/24/2018 5:59:44 PM
+Created            : 5/24/2018 6:09:44 PM
+Updated            : 5/24/2018 6:09:44 PM
+Tags               :
+VaultName          : contoso
+Name               : test2
+Version            :
+Id                 : https://contoso.vault.azure.net:443/certificates/test2
 ```
 
 This command gets all the certificates that have been previously deleted, but not purged, in the key vault named Contoso.
 
 ### Example 3: Gets the certificate MyCert that has been deleted but not purged for this key vault.
-```
-PS C:\>Get-AzureKeyVaultCertificate -VaultName 'Contoso' -Name 'MyCert' -InRemovedState
+```powershell
+PS C:\> Get-AzureKeyVaultCertificate -VaultName 'contoso' -Name 'test1' -InRemovedState
+
+Certificate        : [Subject]
+                       CN=contoso.com
+
+                     [Issuer]
+                       CN=contoso.com
+
+                     [Serial Number]
+                       XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+                     [Not Before]
+                       5/24/2018 10:58:13 AM
+
+                     [Not After]
+                       11/24/2018 10:08:13 AM
+
+                     [Thumbprint]
+                       XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+KeyId              : https://contoso.vault.azure.net:443/keys/test1/7fe415d5518240c1a6fce89986b8d334
+SecretId           : https://contoso.vault.azure.net:443/secrets/test1/7fe415d5518240c1a6fce89986b8d334
+Thumbprint         : XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+RecoveryLevel      : Recoverable+Purgeable
+ScheduledPurgeDate : 8/22/2018 6:08:32 PM
+DeletedDate        : 5/24/2018 6:08:32 PM
+Enabled            : True
+Expires            : 11/24/2018 6:08:13 PM
+NotBefore          : 5/24/2018 5:58:13 PM
+Created            : 5/24/2018 6:08:13 PM
+Updated            : 5/24/2018 6:08:13 PM
+Tags               :
+VaultName          : contoso
+Name               : test1
+Version            : 7fe415d5518240c1a6fce89986b8d334
+Id                 : https://contoso.vault.azure.net:443/certificates/test1/7fe415d5518240c1a6fce89986b8d334
 ```
 
 This command gets the certificate named 'MyCert' that has been previously deleted, but not purged, in the key vault named Contoso.
@@ -106,7 +184,7 @@ This command will return metadata such as the deletion date, and the scheduled p
 The credentials, account, tenant, and subscription used for communication with azure
 
 ```yaml
-Type: IAzureContextContainer
+Type: Microsoft.Azure.Commands.Common.Authentication.Abstractions.IAzureContextContainer
 Parameter Sets: (All)
 Aliases: AzureRmContext, AzureCredential
 
@@ -121,8 +199,8 @@ Accept wildcard characters: False
 Indicates that this operation gets all versions of the certificate.
 
 ```yaml
-Type: SwitchParameter
-Parameter Sets: ByCertificateAllVersions, ByCertificateAllVersionsInputObject
+Type: System.Management.Automation.SwitchParameter
+Parameter Sets: ByCertificateAllVersions, ByCertificateAllVersionsInputObject, ByCertificateAllVersionsResourceId
 Aliases:
 
 Required: True
@@ -136,7 +214,7 @@ Accept wildcard characters: False
 KeyVault object.
 
 ```yaml
-Type: PSKeyVault
+Type: Microsoft.Azure.Commands.KeyVault.Models.PSKeyVault
 Parameter Sets: ByNameInputObject, ByCertificateNameAndVersionInputObject, ByCertificateAllVersionsInputObject
 Aliases:
 
@@ -151,8 +229,8 @@ Accept wildcard characters: False
 Specifies whether to include previously deleted certificates in the output
 
 ```yaml
-Type: SwitchParameter
-Parameter Sets: ByName, ByNameInputObject
+Type: System.Management.Automation.SwitchParameter
+Parameter Sets: ByName, ByNameInputObject, ByNameResourceId
 Aliases:
 
 Required: False
@@ -166,35 +244,35 @@ Accept wildcard characters: False
 Specifies the name of the certificate to get.
 
 ```yaml
-Type: String
-Parameter Sets: ByName, ByNameInputObject
+Type: System.String
+Parameter Sets: ByName, ByNameInputObject, ByNameResourceId
 Aliases: CertificateName
 
 Required: False
 Position: 1
 Default value: None
-Accept pipeline input: True (ByPropertyName)
+Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ```yaml
-Type: String
-Parameter Sets: ByCertificateNameAndVersion, ByCertificateAllVersions, ByCertificateNameAndVersionInputObject, ByCertificateAllVersionsInputObject
+Type: System.String
+Parameter Sets: ByCertificateNameAndVersion, ByCertificateAllVersions, ByCertificateNameAndVersionInputObject, ByCertificateAllVersionsInputObject, ByCertificateNameAndVersionResourceId, ByCertificateAllVersionsResourceId
 Aliases: CertificateName
 
 Required: True
 Position: 1
 Default value: None
-Accept pipeline input: True (ByPropertyName)
+Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -VaultName
-Specifies the name of a key vault.
+### -ResourceId
+KeyVault Resource Id.
 
 ```yaml
-Type: String
-Parameter Sets: ByName, ByCertificateNameAndVersion, ByCertificateAllVersions
+Type: System.String
+Parameter Sets: ByNameResourceId, ByCertificateNameAndVersionResourceId, ByCertificateAllVersionsResourceId
 Aliases:
 
 Required: True
@@ -204,18 +282,48 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
+### -VaultName
+Specifies the name of a key vault.
+
+```yaml
+Type: System.String
+Parameter Sets: ByName, ByCertificateNameAndVersion, ByCertificateAllVersions
+Aliases:
+
+Required: True
+Position: 0
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -Version
 Specifies the version of a certificate.
 
 ```yaml
-Type: String
-Parameter Sets: ByCertificateNameAndVersion, ByCertificateNameAndVersionInputObject
+Type: System.String
+Parameter Sets: ByCertificateNameAndVersion, ByCertificateNameAndVersionInputObject, ByCertificateNameAndVersionResourceId
 Aliases: CertificateVersion
 
 Required: True
 Position: 2
 Default value: None
-Accept pipeline input: True (ByPropertyName)
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -IncludePending
+Specifies whether to include pending certificates in the output
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: ByName, ByNameInputObject, ByNameResourceId
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
@@ -224,14 +332,20 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
-This cmdlet does not accept any input.
+### Microsoft.Azure.Commands.KeyVault.Models.PSKeyVault
+Parameters: InputObject (ByValue)
+
+### System.String
 
 ## OUTPUTS
 
-### System.Collections.Generic.List`1[Microsoft.Azure.Commands.KeyVault.Models.PSKeyVaultCertificateIdentityItem]
+### Microsoft.Azure.Commands.KeyVault.Models.PSKeyVaultCertificateIdentityItem
 
 ### Microsoft.Azure.Commands.KeyVault.Models.PSKeyVaultCertificate
+
+### Microsoft.Azure.Commands.KeyVault.Models.PSDeletedKeyVaultCertificate
+
+### Microsoft.Azure.Commands.KeyVault.Models.PSDeletedKeyVaultCertificateIdentityItem
 
 ## NOTES
 

@@ -21,8 +21,7 @@ using System.Security.Permissions;
 
 namespace Microsoft.Azure.Commands.DataFactories
 {
-    [Cmdlet(VerbsCommon.New, Constants.Pipeline, DefaultParameterSetName = ByFactoryName, 
-        SupportsShouldProcess = true), OutputType(typeof(PSPipeline))]
+    [Cmdlet("New", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "DataFactoryPipeline", DefaultParameterSetName = ByFactoryName, SupportsShouldProcess = true), OutputType(typeof(PSPipeline))]
     public class NewAzureDataFactoryPipelineCommand : DataFactoryBaseCmdlet
     {
         [Parameter(Position = 1, Mandatory = false, ValueFromPipelineByPropertyName = true, HelpMessage = "The pipeline name.")]
@@ -44,7 +43,6 @@ HelpMessage = "The data factory object.")]
         [Parameter(Mandatory = false, HelpMessage = "Don't ask for confirmation.")]
         public SwitchParameter Force { get; set; }
 
-        [EnvironmentPermission(SecurityAction.Demand, Unrestricted = true)]
         public override void ExecuteCmdlet()
         {
             if (ParameterSetName == ByFactoryObject)

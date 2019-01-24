@@ -17,12 +17,13 @@ assign a custom domain to it and update global variable values.
 #>
 
 #Global variables
-$rgname = "webappsslbindingrb"
-$appname = "webappsslbindingtest"
+$rgname = "lketmtestantps10"
+$appname = "lketmtestantps10"
 $slot = "testslot"
-$prodHostname = "www.webappsslbindingtests.com"
-$slotHostname = "testslot.webappsslbindingtests.com"
-$thumbprint = "40D6600B0B8740C41BA4B3D13B967DDEF6ED1918"
+$prodHostname = "www.adorenow.net"
+$slotHostname = "testslot.adorenow.net"
+$thumbprint = "EFB353A477464228CC8A155C38DCB8D02726A4C1"
+$thumbprintSlot = "F75A7A8C033FBEA02A1578812DB289277E23EAB1"
 
 <#
 .SYNOPSIS
@@ -37,7 +38,7 @@ function Test-CreateNewWebAppSSLBinding
 		Assert-AreEqual $prodHostname $createResult.Name
 
 		# Test - Create Ssl binding for web app slot
-		$createResult = New-AzureRMWebAppSSLBinding -ResourceGroupName $rgname -WebAppName  $appname -Slot $slot -Name $slotHostname -Thumbprint $thumbprint
+		$createResult = New-AzureRMWebAppSSLBinding -ResourceGroupName $rgname -WebAppName  $appname -Slot $slot -Name $slotHostname -Thumbprint $thumbprintSlot
 		Assert-AreEqual $slotHostname $createResult.Name
 	}
     finally
@@ -58,11 +59,10 @@ function Test-GetNewWebAppSSLBinding
 	{
 		# Setup - Create Ssl bindings
 		$createWebAppResult = New-AzureRMWebAppSSLBinding -ResourceGroupName $rgname -WebAppName  $appname -Name $prodHostname -Thumbprint $thumbprint
-		$createWebAppSlotResult = New-AzureRMWebAppSSLBinding -ResourceGroupName $rgname -WebAppName  $appname -Slot $slot -Name $slotHostname -Thumbprint $thumbprint
+		$createWebAppSlotResult = New-AzureRMWebAppSSLBinding -ResourceGroupName $rgname -WebAppName  $appname -Slot $slot -Name $slotHostname -Thumbprint $thumbprintSlot
 
 		# Test - Get commands for web app
 		$getResult = Get-AzureRMWebAppSSLBinding -ResourceGroupName $rgname -WebAppName  $appname
-		Assert-AreEqual 2 $getResult.Count
 		$currentHostNames = $getResult | Select -expand Name
 		Assert-True { $currentHostNames -contains $createWebAppResult.Name }
 		$getResult = Get-AzureRMWebAppSSLBinding -ResourceGroupName $rgname -WebAppName  $appname -Name $prodHostname
@@ -70,7 +70,6 @@ function Test-GetNewWebAppSSLBinding
 
 		# Test - Get commands for web app slot
 		$getResult = Get-AzureRMWebAppSSLBinding -ResourceGroupName $rgname -WebAppName  $appname -Slot $slot
-		Assert-AreEqual 1 $getResult.Count
 		$currentHostNames = $getResult | Select -expand Name
 		Assert-True { $currentHostNames -contains $createWebAppSlotResult.Name }
 		$getResult = Get-AzureRMWebAppSSLBinding -ResourceGroupName $rgname -WebAppName  $appname -Slot $slot -Name $slotHostname
@@ -94,7 +93,7 @@ function Test-RemoveNewWebAppSSLBinding
 	{
 		# Setup - Create Ssl bindings
 		New-AzureRMWebAppSSLBinding -ResourceGroupName $rgname -WebAppName  $appname -Name $prodHostname -Thumbprint $thumbprint
-		New-AzureRMWebAppSSLBinding -ResourceGroupName $rgname -WebAppName  $appname -Slot $slot -Name $slotHostname -Thumbprint $thumbprint
+		New-AzureRMWebAppSSLBinding -ResourceGroupName $rgname -WebAppName  $appname -Slot $slot -Name $slotHostname -Thumbprint $thumbprintSlot
 
 		# Tests - Removing binding from web app and web app slot
 		Remove-AzureRMWebAppSSLBinding -ResourceGroupName $rgname -WebAppName  $appname -Name $prodHostname -Force
@@ -133,12 +132,12 @@ function Test-WebAppSSLBindingPipeSupport
 		$createResult = $webapp | New-AzureRMWebAppSSLBinding -Name $prodHostName -Thumbprint $thumbprint
 		Assert-AreEqual $prodHostName $createResult.Name
 
-		$createResult = $webappslot | New-AzureRMWebAppSSLBinding -Name $slotHostName -Thumbprint $thumbprint
+		$createResult = $webappslot | New-AzureRMWebAppSSLBinding -Name $slotHostName -Thumbprint $thumbprintSlot
 		Assert-AreEqual $slotHostName $createResult.Name
 
 		# Test - Retrieve Ssl bindings using web app and web app slot objects
 		$getResult = $webapp |  Get-AzureRMWebAppSSLBinding
-		Assert-AreEqual 2 $getResult.Count
+		Assert-AreEqual 1 $getResult.Count
 
 		$getResult = $webappslot | Get-AzureRMWebAppSSLBinding
 		Assert-AreEqual 1 $getResult.Count
@@ -174,11 +173,11 @@ function Test-GetWebAppCertificate
 		New-AzureRMWebAppSSLBinding -ResourceGroupName $rgname -WebAppName  $appname -Name $prodHostname -Thumbprint $thumbprint
 
 		# Tests - Retrieve web app certificate objects
-		$certificates = Get-AzureRMWebAppCertificate
+		$certificates = Get-AzureRMWebAppCertificate -ResourceGroupName $rgname
 		$thumbprints = $certificates | Select -expand Thumbprint
 		Assert-True { $thumbprints -contains $thumbprint }
 
-		$certificate = Get-AzureRMWebAppCertificate -Thumbprint $thumbprint
+		$certificate = Get-AzureRMWebAppCertificate -ResourceGroupName $rgname -Thumbprint $thumbprint
 		Assert-AreEqual $thumbprint $certificate.Thumbprint
 	}
     finally

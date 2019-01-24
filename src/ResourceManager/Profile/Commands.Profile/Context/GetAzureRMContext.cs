@@ -15,6 +15,10 @@
 using Microsoft.Azure.Commands.Common.Authentication.Abstractions;
 using Microsoft.Azure.Commands.Common.Authentication.Models;
 using Microsoft.Azure.Commands.Profile.Models;
+// TODO: Remove IfDef
+#if NETSTANDARD
+using Microsoft.Azure.Commands.Profile.Models.Core;
+#endif
 using Microsoft.Azure.Commands.ResourceManager.Common;
 using System.Management.Automation;
 using System;
@@ -25,9 +29,9 @@ using Microsoft.Azure.Commands.Profile.Properties;
 namespace Microsoft.Azure.Commands.Profile
 {
     /// <summary>
-    /// Cmdlet to get current context. 
+    /// Cmdlet to get current context.
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "AzureRmContext", DefaultParameterSetName = GetSingleParameterSet)]
+    [Cmdlet("Get", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "Context", DefaultParameterSetName = GetSingleParameterSet)]
     [OutputType(typeof(PSAzureContext))]
     public class GetAzureRMContextCommand : AzureRMCmdlet, IDynamicParameters
     {
@@ -53,13 +57,10 @@ namespace Microsoft.Azure.Commands.Profile
 
         public override void ExecuteCmdlet()
         {
+            // If no context is found, return
             if (DefaultContext == null)
             {
-                WriteError(new ErrorRecord(
-                        new PSInvalidOperationException(Resources.RunLoginCmdlet),
-                        string.Empty,
-                        ErrorCategory.AuthenticationError,
-                        null));
+                return;
             }
 
             if (ListAvailable.IsPresent)
@@ -100,6 +101,15 @@ namespace Microsoft.Azure.Commands.Profile
             if (name != null)
             {
                 context.Name = name;
+            }
+
+            // Don't write the default (empty) context to the output stream
+            if (context.Account == null &&
+                context.Environment == null &&
+                context.Subscription == null &&
+                context.Tenant == null)
+            {
+                return;
             }
 
             WriteObject(context);

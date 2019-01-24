@@ -21,8 +21,7 @@ using System.Security.Permissions;
 
 namespace Microsoft.Azure.Commands.DataFactories
 {
-    [Cmdlet(VerbsCommon.New, Constants.LinkedService, DefaultParameterSetName = ByFactoryName, 
-        SupportsShouldProcess = true), OutputType(typeof(PSLinkedService))]
+    [Cmdlet("New", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "DataFactoryLinkedService", DefaultParameterSetName = ByFactoryName, SupportsShouldProcess = true), OutputType(typeof(PSLinkedService))]
     public class NewAzureDataFactoryLinkedServiceCommand : DataFactoryBaseCmdlet
     {
         [Parameter(ParameterSetName = ByFactoryObject, Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true,
@@ -45,7 +44,6 @@ namespace Microsoft.Azure.Commands.DataFactories
         [Parameter(Mandatory = false, HelpMessage = "Don't ask for confirmation.")]
         public SwitchParameter Force { get; set; }
 
-        [EnvironmentPermission(SecurityAction.Demand, Unrestricted = true)]
         public override void ExecuteCmdlet()
         {
             if (ParameterSetName == ByFactoryObject)

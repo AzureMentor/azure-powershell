@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: Microsoft.Azure.Commands.Network.dll-Help.xml
 Module Name: AzureRM.Network
 ms.assetid: E40CAF2F-ED57-4AC1-8B9A-E48042DD8F91
@@ -13,10 +13,21 @@ Creates an Azure express route circuit.
 
 ## SYNTAX
 
+### ServiceProvider
 ```
 New-AzureRmExpressRouteCircuit -Name <String> -ResourceGroupName <String> -Location <String>
- [-SkuTier <String>] [-SkuFamily <String>] -ServiceProviderName <String> -PeeringLocation <String>
- -BandwidthInMbps <Int32>
+ [-SkuTier <String>] [-SkuFamily <String>] [-ServiceProviderName <String>] [-PeeringLocation <String>]
+ [-BandwidthInMbps <Int32>]
+ [-Peering <System.Collections.Generic.List`1[Microsoft.Azure.Commands.Network.Models.PSPeering]>]
+ [-Authorization <System.Collections.Generic.List`1[Microsoft.Azure.Commands.Network.Models.PSExpressRouteCircuitAuthorization]>]
+ [-AllowClassicOperations <Boolean>] [-Tag <Hashtable>] [-Force] [-AsJob]
+ [-DefaultProfile <IAzureContextContainer>] [-WhatIf] [-Confirm] [<CommonParameters>]
+```
+
+### ExpressRoutePort
+```
+New-AzureRmExpressRouteCircuit -Name <String> -ResourceGroupName <String> -Location <String>
+ [-SkuTier <String>] [-SkuFamily <String>] [-ExpressRoutePort <PSExpressRoutePort>] [-BandwidthInGbps <Double>]
  [-Peering <System.Collections.Generic.List`1[Microsoft.Azure.Commands.Network.Models.PSPeering]>]
  [-Authorization <System.Collections.Generic.List`1[Microsoft.Azure.Commands.Network.Models.PSExpressRouteCircuitAuthorization]>]
  [-AllowClassicOperations <Boolean>] [-Tag <Hashtable>] [-Force] [-AsJob]
@@ -43,6 +54,20 @@ $parameters = @{
 New-AzureRmExpressRouteCircuit @parameters
 ```
 
+### Example 2: Create a new ExpressRoute circuit on ExpressRoutePort
+```
+$parameters = @{
+    Name='ExpressRouteCircuit'
+    ResourceGroupName='ExpressRouteResourceGroup'
+    Location='West US'
+    SkuTier='Standard'
+    SkuFamily='MeteredData'
+    ExpressRoutePort=$PSExpressRoutePort
+    BandwidthInGbps=10.0
+}
+New-AzureRmExpressRouteCircuit @parameters
+```
+
 ## PARAMETERS
 
 ### -AllowClassicOperations
@@ -50,9 +75,9 @@ The use of this parameter allows you to use the classic Azure PowerShell cmdlets
 circuit.
 
 ```yaml
-Type: Boolean
+Type: System.Nullable`1[System.Boolean]
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 
 Required: False
 Position: Named
@@ -65,9 +90,9 @@ Accept wildcard characters: False
 Run cmdlet in the background
 
 ```yaml
-Type: SwitchParameter
+Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 
 Required: False
 Position: Named
@@ -82,7 +107,22 @@ A list of circuit authorizations.
 ```yaml
 Type: System.Collections.Generic.List`1[Microsoft.Azure.Commands.Network.Models.PSExpressRouteCircuitAuthorization]
 Parameter Sets: (All)
-Aliases: 
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -BandwidthInGbps
+The bandwidth of the circuit when the circuit is provisioned on an ExpressRoutePort resource.
+
+```yaml
+Type: Double
+Parameter Sets: ExpressRoutePort
+Aliases:
 
 Required: False
 Position: Named
@@ -95,11 +135,11 @@ Accept wildcard characters: False
 The bandwidth of the circuit. This must be a value that is supported by the service provider.
 
 ```yaml
-Type: Int32
-Parameter Sets: (All)
-Aliases: 
+Type: System.Int32
+Parameter Sets: ServiceProvider
+Aliases:
 
-Required: True
+Required: False
 Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
@@ -110,7 +150,7 @@ Accept wildcard characters: False
 The credentials, account, tenant, and subscription used for communication with azure.
 
 ```yaml
-Type: IAzureContextContainer
+Type: Microsoft.Azure.Commands.Common.Authentication.Abstractions.IAzureContextContainer
 Parameter Sets: (All)
 Aliases: AzureRmContext, AzureCredential
 
@@ -121,13 +161,28 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -ExpressRoutePort
+The reference to the ExpressRoutePort resource when the circuit is provisioned on an ExpressRoutePort resource.
+
+```yaml
+Type: PSExpressRoutePort
+Parameter Sets: ExpressRoutePort
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByValue)
+Accept wildcard characters: False
+```
+
 ### -Force
 Forces the command to run without asking for user confirmation.
 
 ```yaml
-Type: SwitchParameter
+Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 
 Required: False
 Position: Named
@@ -140,9 +195,9 @@ Accept wildcard characters: False
 The location of the circuit.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 
 Required: True
 Position: Named
@@ -155,7 +210,7 @@ Accept wildcard characters: False
 The name of the ExpressRoute circuit being created.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
 Aliases: ResourceName
 
@@ -172,7 +227,7 @@ A list peer configurations.
 ```yaml
 Type: System.Collections.Generic.List`1[Microsoft.Azure.Commands.Network.Models.PSPeering]
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 
 Required: False
 Position: Named
@@ -185,11 +240,11 @@ Accept wildcard characters: False
 The name of the peering location supported by the service provider.
 
 ```yaml
-Type: String
-Parameter Sets: (All)
-Aliases: 
+Type: System.String
+Parameter Sets: ServiceProvider
+Aliases:
 
-Required: True
+Required: False
 Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
@@ -200,9 +255,9 @@ Accept wildcard characters: False
 The resource group that will contain the circuit.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 
 Required: True
 Position: Named
@@ -216,11 +271,11 @@ The name of the circuit service provider. This must match a name listed by the
 Get-AzureRmExpressRouteServiceProvider cmdlet.
 
 ```yaml
-Type: String
-Parameter Sets: (All)
-Aliases: 
+Type: System.String
+Parameter Sets: ServiceProvider
+Aliases:
 
-Required: True
+Required: False
 Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
@@ -233,9 +288,9 @@ SKU family determines the billing type. Possible values for this parameter are: 
 you can't change the type from UnlimitedData to MeteredData.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 Accepted values: MeteredData, UnlimitedData
 
 Required: False
@@ -249,9 +304,9 @@ Accept wildcard characters: False
 The tier of service for the circuit. Possible values for this parameter are: `Standard` or `Premium`.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 Accepted values: Standard, Premium
 
 Required: False
@@ -263,13 +318,12 @@ Accept wildcard characters: False
 
 ### -Tag
 Key-value pairs in the form of a hash table. For example:
-
 @{key0="value0";key1=$null;key2="value2"}
 
 ```yaml
-Type: Hashtable
+Type: System.Collections.Hashtable
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 
 Required: False
 Position: Named
@@ -282,7 +336,7 @@ Accept wildcard characters: False
 Prompts you for confirmation before running the cmdlet.
 
 ```yaml
-Type: SwitchParameter
+Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
 Aliases: cf
 
@@ -298,7 +352,7 @@ Shows what would happen if the cmdlet runs.
 The cmdlet is not run.
 
 ```yaml
-Type: SwitchParameter
+Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
 Aliases: wi
 
@@ -314,8 +368,17 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
-This cmdlet does not accept any input.
+### System.String
+
+### System.Int32
+
+### System.Collections.Generic.List`1[[Microsoft.Azure.Commands.Network.Models.PSPeering, Microsoft.Azure.Commands.Network, Version=6.4.1.0, Culture=neutral, PublicKeyToken=null]]
+
+### System.Collections.Generic.List`1[[Microsoft.Azure.Commands.Network.Models.PSExpressRouteCircuitAuthorization, Microsoft.Azure.Commands.Network, Version=6.4.1.0, Culture=neutral, PublicKeyToken=null]]
+
+### System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]
+
+### System.Collections.Hashtable
 
 ## OUTPUTS
 

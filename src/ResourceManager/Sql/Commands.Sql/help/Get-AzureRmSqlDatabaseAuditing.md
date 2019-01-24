@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: Microsoft.Azure.Commands.Sql.dll-Help.xml
 Module Name: AzureRM.Sql
 ms.assetid: 14814BF3-51AF-4E51-A8A6-661825BD88D1
@@ -27,16 +27,18 @@ To use the cmdlet, use the *ResourceGroupName*, *ServerName*, and *DatabaseName*
 ### Example 1: Get the auditing settings of an Azure SQL database
 ```
 PS C:\>Get-AzureRmSqlDatabaseAuditing -ResourceGroupName "ResourceGroup01" -ServerName "Server01" -DatabaseName "Database01"
-DatabaseName           : database01
-AuditAction            : {}
-AuditActionGroup       : {SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP, FAILED_DATABASE_AUTHENTICATION_GROUP,
-                          BATCH_COMPLETED_GROUP, ...}
-ResourceGroupName      : resourcegroup01
-ServerName             : server01
-AuditState             : Enabled
-StorageAccountName     : mystorage
-StorageKeyType         : Primary
-RetentionInDays        : 0
+DatabaseName                 : database01
+AuditAction                  : {}
+AuditActionGroup             : {SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP, FAILED_DATABASE_AUTHENTICATION_GROUP,
+                                BATCH_COMPLETED_GROUP, ...}
+ResourceGroupName            : resourcegroup01
+ServerName                   : server01
+AuditState                   : Enabled
+StorageAccountName           : mystorage
+StorageKeyType               : Primary
+RetentionInDays              : 0
+StorageAccountSubscriptionId : 7fe3301d-31d3-4668-af5e-211a890ba6e3
+PredicateExpression			 : statement <> 'select 1'
 ```
 
 ## PARAMETERS
@@ -45,7 +47,7 @@ RetentionInDays        : 0
 SQL Database name.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
 Aliases:
 
@@ -60,7 +62,7 @@ Accept wildcard characters: False
 The credentials, account, tenant, and subscription used for communication with azure
 
 ```yaml
-Type: IAzureContextContainer
+Type: Microsoft.Azure.Commands.Common.Authentication.Abstractions.IAzureContextContainer
 Parameter Sets: (All)
 Aliases: AzureRmContext, AzureCredential
 
@@ -75,7 +77,7 @@ Accept wildcard characters: False
 The name of the resource group.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
 Aliases:
 
@@ -90,7 +92,7 @@ Accept wildcard characters: False
 SQL Database server name.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
 Aliases:
 
@@ -105,13 +107,13 @@ Accept wildcard characters: False
 Prompts you for confirmation before running the cmdlet.
 
 ```yaml
-Type: SwitchParameter
+Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
 Aliases: cf
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -120,13 +122,13 @@ Accept wildcard characters: False
 Shows what would happen if the cmdlet runs. The cmdlet is not run.
 
 ```yaml
-Type: SwitchParameter
+Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
 Aliases: wi
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -136,12 +138,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
-This cmdlet does not accept any input.
-
 ## OUTPUTS
 
-### Microsoft.Azure.Commands.Sql.Security.Model.DatabaseBlobAuditingSettingsModel
+### Microsoft.Azure.Commands.Sql.Auditing.Model.DatabaseBlobAuditingSettingsModel
 
 ## NOTES
 

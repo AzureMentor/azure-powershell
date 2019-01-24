@@ -77,7 +77,18 @@ namespace Microsoft.Azure.Commands.DataLakeStore.Properties {
                 return ResourceManager.GetString("AddDataLakeFirewallRule", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Adding the Data Lake Store virtual network rule: &apos;{0}&apos; ....
+        /// </summary>
+        internal static string AddDataLakeVirtualNetworkRule
+        {
+            get
+            {
+                return ResourceManager.GetString("AddDataLakeVirtualNetworkRule", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Adding the Data Lake Store trusted identity provider: &apos;{0}&apos; ....
         /// </summary>
@@ -185,31 +196,24 @@ namespace Microsoft.Azure.Commands.DataLakeStore.Properties {
                 return ResourceManager.GetString("FirewallRuleNotFound", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to The specified virtual network rule &apos;{0}&apos; does not exist..
+        /// </summary>
+        internal static string VirtualNetworkRuleNotFound
+        {
+            get
+            {
+                return ResourceManager.GetString("VirtualNetworkRuleNotFound", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to User supplied Key Vault information. For service managed encryption user supplied Key Vault information is ignored..
         /// </summary>
         internal static string IgnoredKeyVaultParams {
             get {
                 return ResourceManager.GetString("IgnoredKeyVaultParams", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Parameter Clean is deprecated. This parameter will be removed in future releases..
-        /// </summary>
-        internal static string IncorrectCleanWarning {
-            get {
-                return ResourceManager.GetString("IncorrectCleanWarning", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Parameter ConcurrentFileCount is deprecated. This parameter will be removed in future releases. Please use Concurrency parameter instead..
-        /// </summary>
-        internal static string IncorrectConcurrentFileCountWarning {
-            get {
-                return ResourceManager.GetString("IncorrectConcurrentFileCountWarning", resourceCulture);
             }
         }
         
@@ -228,15 +232,6 @@ namespace Microsoft.Azure.Commands.DataLakeStore.Properties {
         internal static string IncorrectOutputTypeWarning {
             get {
                 return ResourceManager.GetString("IncorrectOutputTypeWarning", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Parameter PerFileThreadCount is deprecated. This parameter will be removed in future releases. Please use Concurrency parameter instead..
-        /// </summary>
-        internal static string IncorrectPerFileThreadCountWarning {
-            get {
-                return ResourceManager.GetString("IncorrectPerFileThreadCountWarning", resourceCulture);
             }
         }
         
@@ -412,7 +407,7 @@ namespace Microsoft.Azure.Commands.DataLakeStore.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No subscription found in the context.  Please ensure that the credentials you provided are authorized to access an Azure subscription, then run Login-AzureRMAccount to login..
+        ///   Looks up a localized string similar to No subscription found in the context.  Please ensure that the credentials you provided are authorized to access an Azure subscription, then run Connect-AzureRMAccount to login..
         /// </summary>
         internal static string NoSubscriptionInContext {
             get {
@@ -464,7 +459,18 @@ namespace Microsoft.Azure.Commands.DataLakeStore.Properties {
                 return ResourceManager.GetString("RemoveDataLakeStoreFirewallRule", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Removing Data Lake Store virtual network rule: &apos;{0}&apos; ....
+        /// </summary>
+        internal static string RemoveDataLakeStoreVirtualNetworkRule
+        {
+            get
+            {
+                return ResourceManager.GetString("RemoveDataLakeStoreVirtualNetworkRule", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Removing Data Lake file or folder at path: &apos;{0}&apos; ....
         /// </summary>
@@ -507,6 +513,17 @@ namespace Microsoft.Azure.Commands.DataLakeStore.Properties {
         internal static string RemovingDataLakeStoreFirewallRule {
             get {
                 return ResourceManager.GetString("RemovingDataLakeStoreFirewallRule", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove the Data Lake Store virtuan network rule: &apos;{0}&apos;?.
+        /// </summary>
+        internal static string RemovingDataLakeStoreVirtualNetworkRule
+        {
+            get
+            {
+                return ResourceManager.GetString("RemovingDataLakeStoreVirtualNetworkRule", resourceCulture);
             }
         }
         
@@ -554,7 +571,18 @@ namespace Microsoft.Azure.Commands.DataLakeStore.Properties {
                 return ResourceManager.GetString("SetDataLakeFirewallRule", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Setting the Data Lake Store virtual network rule: &apos;{0}&apos; ....
+        /// </summary>
+        internal static string SetDataLakeVirtualNetworkRule
+        {
+            get
+            {
+                return ResourceManager.GetString("SetDataLakeVirtualNetworkRule", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Setting the Data Lake file or folder ACL at path: &apos;{0}&apos; ....
         /// </summary>
@@ -597,6 +625,15 @@ namespace Microsoft.Azure.Commands.DataLakeStore.Properties {
         internal static string SetFileExpiry {
             get {
                 return ResourceManager.GetString("SetFileExpiry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default Acls are being set recursively without the Access Acls. Default Acls will not change the access acls of existing files..
+        /// </summary>
+        internal static string SetOnlyDefaultAclRecursively {
+            get {
+                return ResourceManager.GetString("SetOnlyDefaultAclRecursively", resourceCulture);
             }
         }
         

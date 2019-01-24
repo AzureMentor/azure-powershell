@@ -25,12 +25,17 @@ Restore-AzureKeyVaultKey [-InputObject] <PSKeyVault> [-InputFile] <String>
  [-DefaultProfile <IAzureContextContainer>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
+### ByResourceId
+```
+Restore-AzureKeyVaultKey [-ResourceId] <String> [-InputFile] <String>
+ [-DefaultProfile <IAzureContextContainer>] [-WhatIf] [-Confirm] [<CommonParameters>]
+```
+
 ## DESCRIPTION
 The **Restore-AzureKeyVaultKey** cmdlet creates a key in the specified key vault.
 This key is a replica of the backed-up key in the input file and has the same name as the original key.
 If the key vault already has a key by the same name, this cmdlet fails instead of overwriting the original key.
 If the backup contains multiple versions of a key, all versions are restored.
-
 The key vault that you restore the key into can be different from the key vault that you backed up the key from.
 However, the key vault must use the same subscription and be in an Azure region in the same geography (for example, North America).
 See the Microsoft Azure Trust Center (https://azure.microsoft.com/support/trust-center/) for the mapping of Azure regions to geographies.
@@ -38,8 +43,20 @@ See the Microsoft Azure Trust Center (https://azure.microsoft.com/support/trust-
 ## EXAMPLES
 
 ### Example 1: Restore a backed-up key
-```
-PS C:\>Restore-AzureKeyVaultKey -VaultName 'MyKeyVault' -InputFile "C:\Backup.blob"
+```powershell
+PS C:\> Restore-AzureKeyVaultKey -VaultName 'MyKeyVault' -InputFile "C:\Backup.blob"
+
+Vault Name     : MyKeyVault
+Name           : key1
+Version        : 394f9379a47a4e2086585468de6c7ae5
+Id             : https://mykeyvault.vault.azure.net:443/keys/key1/394f9379a47a4e2086585468de6c7ae5
+Enabled        : True
+Expires        :
+Not Before     :
+Created        : 4/6/2018 11:31:36 PM
+Updated        : 4/6/2018 11:35:04 PM
+Purge Disabled : False
+Tags           :
 ```
 
 This command restores a key, including all of its versions, from the backup file named Backup.blob into the key vault named MyKeyVault.
@@ -50,7 +67,7 @@ This command restores a key, including all of its versions, from the backup file
 The credentials, account, tenant, and subscription used for communication with azure
 
 ```yaml
-Type: IAzureContextContainer
+Type: Microsoft.Azure.Commands.Common.Authentication.Abstractions.IAzureContextContainer
 Parameter Sets: (All)
 Aliases: AzureRmContext, AzureCredential
 
@@ -65,7 +82,7 @@ Accept wildcard characters: False
 Specifies the input file that contains the backup of the key to restore.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
 Aliases:
 
@@ -80,7 +97,7 @@ Accept wildcard characters: False
 KeyVault object
 
 ```yaml
-Type: PSKeyVault
+Type: Microsoft.Azure.Commands.KeyVault.Models.PSKeyVault
 Parameter Sets: ByInputObject
 Aliases:
 
@@ -91,12 +108,12 @@ Accept pipeline input: True (ByValue)
 Accept wildcard characters: False
 ```
 
-### -VaultName
-Specifies the name of the key vault into which to restore the key.
+### -ResourceId
+KeyVault Resource Id
 
 ```yaml
-Type: String
-Parameter Sets: ByVaultName
+Type: System.String
+Parameter Sets: ByResourceId
 Aliases:
 
 Required: True
@@ -106,11 +123,26 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
+### -VaultName
+Specifies the name of the key vault into which to restore the key.
+
+```yaml
+Type: System.String
+Parameter Sets: ByVaultName
+Aliases:
+
+Required: True
+Position: 0
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -Confirm
 Prompts you for confirmation before running the cmdlet.
 
 ```yaml
-Type: SwitchParameter
+Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
 Aliases: cf
 
@@ -126,7 +158,7 @@ Shows what would happen if the cmdlet runs.
 The cmdlet is not run.
 
 ```yaml
-Type: SwitchParameter
+Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
 Aliases: wi
 
@@ -142,8 +174,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
-This cmdlet does not accept any input.
+### Microsoft.Azure.Commands.KeyVault.Models.PSKeyVault
+Parameters: InputObject (ByValue)
+
+### System.String
 
 ## OUTPUTS
 

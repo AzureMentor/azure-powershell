@@ -17,6 +17,7 @@ using System;
 using System.Management.Automation;
 using System.Security;
 using Microsoft.Azure.Commands.KeyVault.Properties;
+using Microsoft.Azure.Commands.ResourceManager.Common.ArgumentCompleters;
 
 namespace Microsoft.Azure.Commands.KeyVault
 {
@@ -24,10 +25,7 @@ namespace Microsoft.Azure.Commands.KeyVault
     /// Set-AzureKeyVaultCertificateIssuer sets the provided parameters on the
     /// issuer object
     /// </summary>
-    [Cmdlet(VerbsCommon.Set, CmdletNoun.AzureKeyVaultCertificateIssuer,
-        SupportsShouldProcess = true,
-        DefaultParameterSetName = ExpandedParameterSet,
-        HelpUri = Constants.KeyVaultHelpUri)]
+    [Cmdlet("Set", ResourceManager.Common.AzureRMConstants.AzurePrefix + "KeyVaultCertificateIssuer",SupportsShouldProcess = true,DefaultParameterSetName = ExpandedParameterSet)]
     [OutputType(typeof(PSKeyVaultCertificatePolicy))]
     public class SetAzureKeyVaultCertificateIssuer : KeyVaultCmdletBase
     {
@@ -45,8 +43,8 @@ namespace Microsoft.Azure.Commands.KeyVault
         /// </summary>
         [Parameter(Mandatory = true,
                    Position = 0,
-                   ValueFromPipelineByPropertyName = true,
                    HelpMessage = "Vault name. Cmdlet constructs the FQDN of a vault based on the name and currently selected environment.")]
+        [ResourceNameCompleter("Microsoft.KeyVault/vaults", "FakeResourceGroupName")]
         [ValidateNotNullOrEmpty]
         public string VaultName { get; set; }
 
@@ -55,7 +53,6 @@ namespace Microsoft.Azure.Commands.KeyVault
         /// </summary>
         [Parameter(Mandatory = true,
                    Position = 1,
-                   ValueFromPipelineByPropertyName = true,
                    HelpMessage = "Issuer name. Cmdlet constructs the FQDN of a certificate issuer from vault name, currently selected environment and issuer name.")]
         [ValidateNotNullOrEmpty]
         [Alias(Constants.IssuerName)]
@@ -65,8 +62,8 @@ namespace Microsoft.Azure.Commands.KeyVault
         /// <summary>
         /// IssuerProvider
         /// </summary>
-        [Parameter(ParameterSetName = ExpandedParameterSet,
-                   ValueFromPipelineByPropertyName = true,
+        [Parameter(Mandatory = true,
+                   ParameterSetName = ExpandedParameterSet,
                    HelpMessage = "Specifies the type of the issuer.")]
         [ValidateNotNullOrEmpty]
         public string IssuerProvider { get; set; }
@@ -75,7 +72,6 @@ namespace Microsoft.Azure.Commands.KeyVault
         /// AccountId
         /// </summary>
         [Parameter(ParameterSetName = ExpandedParameterSet,
-                   ValueFromPipelineByPropertyName = true,
                    HelpMessage = "Specifies the account id to be used with the issuer.")]
         [ValidateNotNullOrEmpty]
         public string AccountId { get; set; }
@@ -84,7 +80,6 @@ namespace Microsoft.Azure.Commands.KeyVault
         /// ApiKey
         /// </summary>
         [Parameter(ParameterSetName = ExpandedParameterSet,
-                   ValueFromPipelineByPropertyName = true,
                    HelpMessage = "Specifies the api key to be used with the issuer.")]
         [ValidateNotNullOrEmpty]
         public SecureString ApiKey { get; set; }
@@ -92,8 +87,9 @@ namespace Microsoft.Azure.Commands.KeyVault
         /// <summary>
         /// OrganizationDetails
         /// </summary>
-        [Parameter(ParameterSetName = ExpandedParameterSet,
-                   ValueFromPipelineByPropertyName = true,
+        [Parameter(Mandatory = false,
+                   ParameterSetName = ExpandedParameterSet,
+                   ValueFromPipeline = true,
                    HelpMessage = "Specifies the organization details to be used with the issuer.")]
         [ValidateNotNullOrEmpty]
         public PSKeyVaultCertificateOrganizationDetails OrganizationDetails { get; set; }
@@ -108,7 +104,6 @@ namespace Microsoft.Azure.Commands.KeyVault
         [Parameter(Mandatory = true,
                    ParameterSetName = ByValueParameterSet,
                    ValueFromPipeline = true,
-                   ValueFromPipelineByPropertyName = true,
                    HelpMessage = "Specifies the certificate issuer to set.")]
         [ValidateNotNullOrEmpty]
         [Alias("Issuer")]
@@ -136,7 +131,6 @@ namespace Microsoft.Azure.Commands.KeyVault
                 }
                 else
                 {
-                    WriteWarning("Set-AzureKeyVaultCertificateIssuer: The -IssuerProvider parameter will become mandatory in the May 2018 release.");
                     issuerToUse = new PSKeyVaultCertificateIssuer
                     {
                         Name = Name,
@@ -157,7 +151,7 @@ namespace Microsoft.Azure.Commands.KeyVault
 
                 if (PassThru.IsPresent)
                 {
-                    this.WriteObject(PSKeyVaultCertificateIssuer.FromIssuer(resultantIssuer));
+                    this.WriteObject(resultantIssuer);
                 }
             }
         }

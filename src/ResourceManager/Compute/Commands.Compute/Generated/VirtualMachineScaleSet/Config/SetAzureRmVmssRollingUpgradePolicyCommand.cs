@@ -21,6 +21,7 @@
 
 using Microsoft.Azure.Commands.Compute.Automation.Models;
 using Microsoft.Azure.Management.Compute.Models;
+using Microsoft.WindowsAzure.Commands.Common.CustomAttributes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -29,7 +30,13 @@ using System.Management.Automation;
 
 namespace Microsoft.Azure.Commands.Compute.Automation
 {
-    [Cmdlet("Set", "AzureRmVmssRollingUpgradePolicy", SupportsShouldProcess = true)]
+#if NETSTANDARD
+    [CmdletOutputBreakingChange(typeof(PSUpgradePolicy),
+        DeprecatedOutputProperties = new string[] { "AutomaticOSUpgrade", "AutoOSUpgradePolicy" })]
+    [CmdletOutputBreakingChange(typeof(PSVirtualMachineScaleSetIdentity),
+        DeprecatedOutputProperties = new string[] { "IdentityIds" })]
+#endif
+    [Cmdlet(VerbsCommon.Set, ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "VmssRollingUpgradePolicy", SupportsShouldProcess = true)]
     [OutputType(typeof(PSVirtualMachineScaleSet))]
     public partial class SetAzureRmVmssRollingUpgradePolicyCommand : Microsoft.Azure.Commands.ResourceManager.Common.AzureRMCmdlet
     {
@@ -73,20 +80,17 @@ namespace Microsoft.Azure.Commands.Compute.Automation
 
         private void Run()
         {
-            WriteWarning("Set-AzureRmVmssRollingUpgradePolicy: A property of the output of this cmdlet will change in an upcoming breaking change release. " +
-                         "The StorageAccountType property for a DataDisk will return Standard_LRS and Premium_LRS");
-
             if (this.MyInvocation.BoundParameters.ContainsKey("MaxBatchInstancePercent"))
             {
                 // UpgradePolicy
                 if (this.VirtualMachineScaleSet.UpgradePolicy == null)
                 {
-                    this.VirtualMachineScaleSet.UpgradePolicy = new Microsoft.Azure.Management.Compute.Models.UpgradePolicy();
+                    this.VirtualMachineScaleSet.UpgradePolicy = new PSUpgradePolicy();
                 }
                 // RollingUpgradePolicy
                 if (this.VirtualMachineScaleSet.UpgradePolicy.RollingUpgradePolicy == null)
                 {
-                    this.VirtualMachineScaleSet.UpgradePolicy.RollingUpgradePolicy = new Microsoft.Azure.Management.Compute.Models.RollingUpgradePolicy();
+                    this.VirtualMachineScaleSet.UpgradePolicy.RollingUpgradePolicy = new RollingUpgradePolicy();
                 }
                 this.VirtualMachineScaleSet.UpgradePolicy.RollingUpgradePolicy.MaxBatchInstancePercent = this.MaxBatchInstancePercent;
             }
@@ -96,12 +100,12 @@ namespace Microsoft.Azure.Commands.Compute.Automation
                 // UpgradePolicy
                 if (this.VirtualMachineScaleSet.UpgradePolicy == null)
                 {
-                    this.VirtualMachineScaleSet.UpgradePolicy = new Microsoft.Azure.Management.Compute.Models.UpgradePolicy();
+                    this.VirtualMachineScaleSet.UpgradePolicy = new PSUpgradePolicy();
                 }
                 // RollingUpgradePolicy
                 if (this.VirtualMachineScaleSet.UpgradePolicy.RollingUpgradePolicy == null)
                 {
-                    this.VirtualMachineScaleSet.UpgradePolicy.RollingUpgradePolicy = new Microsoft.Azure.Management.Compute.Models.RollingUpgradePolicy();
+                    this.VirtualMachineScaleSet.UpgradePolicy.RollingUpgradePolicy = new RollingUpgradePolicy();
                 }
                 this.VirtualMachineScaleSet.UpgradePolicy.RollingUpgradePolicy.MaxUnhealthyInstancePercent = this.MaxUnhealthyInstancePercent;
             }
@@ -111,12 +115,12 @@ namespace Microsoft.Azure.Commands.Compute.Automation
                 // UpgradePolicy
                 if (this.VirtualMachineScaleSet.UpgradePolicy == null)
                 {
-                    this.VirtualMachineScaleSet.UpgradePolicy = new Microsoft.Azure.Management.Compute.Models.UpgradePolicy();
+                    this.VirtualMachineScaleSet.UpgradePolicy = new PSUpgradePolicy();
                 }
                 // RollingUpgradePolicy
                 if (this.VirtualMachineScaleSet.UpgradePolicy.RollingUpgradePolicy == null)
                 {
-                    this.VirtualMachineScaleSet.UpgradePolicy.RollingUpgradePolicy = new Microsoft.Azure.Management.Compute.Models.RollingUpgradePolicy();
+                    this.VirtualMachineScaleSet.UpgradePolicy.RollingUpgradePolicy = new RollingUpgradePolicy();
                 }
                 this.VirtualMachineScaleSet.UpgradePolicy.RollingUpgradePolicy.MaxUnhealthyUpgradedInstancePercent = this.MaxUnhealthyUpgradedInstancePercent;
             }
@@ -126,12 +130,12 @@ namespace Microsoft.Azure.Commands.Compute.Automation
                 // UpgradePolicy
                 if (this.VirtualMachineScaleSet.UpgradePolicy == null)
                 {
-                    this.VirtualMachineScaleSet.UpgradePolicy = new Microsoft.Azure.Management.Compute.Models.UpgradePolicy();
+                    this.VirtualMachineScaleSet.UpgradePolicy = new PSUpgradePolicy();
                 }
                 // RollingUpgradePolicy
                 if (this.VirtualMachineScaleSet.UpgradePolicy.RollingUpgradePolicy == null)
                 {
-                    this.VirtualMachineScaleSet.UpgradePolicy.RollingUpgradePolicy = new Microsoft.Azure.Management.Compute.Models.RollingUpgradePolicy();
+                    this.VirtualMachineScaleSet.UpgradePolicy.RollingUpgradePolicy = new RollingUpgradePolicy();
                 }
                 this.VirtualMachineScaleSet.UpgradePolicy.RollingUpgradePolicy.PauseTimeBetweenBatches = this.PauseTimeBetweenBatches;
             }
@@ -140,4 +144,3 @@ namespace Microsoft.Azure.Commands.Compute.Automation
         }
     }
 }
-

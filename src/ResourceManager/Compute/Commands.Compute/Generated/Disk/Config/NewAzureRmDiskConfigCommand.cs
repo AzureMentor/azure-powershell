@@ -20,8 +20,6 @@
 // code is regenerated.
 
 using Microsoft.Azure.Commands.Compute.Automation.Models;
-using Microsoft.Azure.Commands.Compute.Common;
-using Microsoft.Azure.Commands.Compute.Models;
 using Microsoft.Azure.Commands.ResourceManager.Common.ArgumentCompleters;
 using Microsoft.Azure.Management.Compute.Models;
 using System;
@@ -32,7 +30,7 @@ using System.Management.Automation;
 
 namespace Microsoft.Azure.Commands.Compute.Automation
 {
-    [Cmdlet("New", "AzureRmDiskConfig", SupportsShouldProcess = true)]
+    [Cmdlet(VerbsCommon.New, ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "DiskConfig", SupportsShouldProcess = true)]
     [OutputType(typeof(PSDisk))]
     public partial class NewAzureRmDiskConfigCommand : Microsoft.Azure.Commands.ResourceManager.Common.AzureRMCmdlet
     {
@@ -41,7 +39,7 @@ namespace Microsoft.Azure.Commands.Compute.Automation
             Position = 0,
             ValueFromPipelineByPropertyName = true)]
         [Alias("AccountType")]
-        [PSArgumentCompleter("Standard_LRS", "Premium_LRS")]
+        [PSArgumentCompleter("Standard_LRS", "Premium_LRS", "StandardSSD_LRS", "UltraSSD_LRS")]
         public string SkuName { get; set; }
 
         [Parameter(
@@ -60,13 +58,23 @@ namespace Microsoft.Azure.Commands.Compute.Automation
             Mandatory = false,
             Position = 3,
             ValueFromPipelineByPropertyName = true)]
-        [ResourceManager.Common.ArgumentCompleters.LocationCompleter("Microsoft.Compute/disks")]
+        [LocationCompleter("Microsoft.Compute/disks")]
         public string Location { get; set; }
 
         [Parameter(
             Mandatory = false,
             ValueFromPipelineByPropertyName = true)]
         public string[] Zone { get; set; }
+
+        [Parameter(
+            Mandatory = false,
+            ValueFromPipelineByPropertyName = true)]
+        public int DiskIOPSReadWrite { get; set; }
+
+        [Parameter(
+            Mandatory = false,
+            ValueFromPipelineByPropertyName = true)]
+        public int DiskMBpsReadWrite { get; set; }
 
         [Parameter(
             Mandatory = false,
@@ -123,25 +131,20 @@ namespace Microsoft.Azure.Commands.Compute.Automation
 
         private void Run()
         {
-            WriteWarning("New-AzureRmDiskConfig: A property of the output of this cmdlet will change in an upcoming breaking change release. " +
-                         "The Name property for a Sku will return Standard_LRS and Premium_LRS");
-
             // Sku
-            Microsoft.Azure.Management.Compute.Models.DiskSku vSku = null;
+            DiskSku vSku = null;
 
             // CreationData
-            Microsoft.Azure.Management.Compute.Models.CreationData vCreationData = null;
+            CreationData vCreationData = null;
 
             // EncryptionSettings
-            Microsoft.Azure.Management.Compute.Models.EncryptionSettings vEncryptionSettings = null;
+            EncryptionSettings vEncryptionSettings = null;
 
             if (this.MyInvocation.BoundParameters.ContainsKey("SkuName"))
             {
-                WriteWarning("New-AzureRmDiskConfig: The accepted values for parameter SkuName will change in an upcoming breaking change release from" +
-                                                     "StandardLRS and PremiumLRS to Standard_LRS and Premium_LRS, respectively.");
                 if (vSku == null)
                 {
-                    vSku = new Microsoft.Azure.Management.Compute.Models.DiskSku();
+                    vSku = new DiskSku();
                 }
                 vSku.Name = this.SkuName;
             }
@@ -150,7 +153,7 @@ namespace Microsoft.Azure.Commands.Compute.Automation
             {
                 if (vCreationData == null)
                 {
-                    vCreationData = new Microsoft.Azure.Management.Compute.Models.CreationData();
+                    vCreationData = new CreationData();
                 }
                 vCreationData.CreateOption = this.CreateOption;
             }
@@ -159,7 +162,7 @@ namespace Microsoft.Azure.Commands.Compute.Automation
             {
                 if (vCreationData == null)
                 {
-                    vCreationData = new Microsoft.Azure.Management.Compute.Models.CreationData();
+                    vCreationData = new CreationData();
                 }
                 vCreationData.StorageAccountId = this.StorageAccountId;
             }
@@ -168,7 +171,7 @@ namespace Microsoft.Azure.Commands.Compute.Automation
             {
                 if (vCreationData == null)
                 {
-                    vCreationData = new Microsoft.Azure.Management.Compute.Models.CreationData();
+                    vCreationData = new CreationData();
                 }
                 vCreationData.ImageReference = this.ImageReference;
             }
@@ -177,7 +180,7 @@ namespace Microsoft.Azure.Commands.Compute.Automation
             {
                 if (vCreationData == null)
                 {
-                    vCreationData = new Microsoft.Azure.Management.Compute.Models.CreationData();
+                    vCreationData = new CreationData();
                 }
                 vCreationData.SourceUri = this.SourceUri;
             }
@@ -186,7 +189,7 @@ namespace Microsoft.Azure.Commands.Compute.Automation
             {
                 if (vCreationData == null)
                 {
-                    vCreationData = new Microsoft.Azure.Management.Compute.Models.CreationData();
+                    vCreationData = new CreationData();
                 }
                 vCreationData.SourceResourceId = this.SourceResourceId;
             }
@@ -195,7 +198,7 @@ namespace Microsoft.Azure.Commands.Compute.Automation
             {
                 if (vEncryptionSettings == null)
                 {
-                    vEncryptionSettings = new Microsoft.Azure.Management.Compute.Models.EncryptionSettings();
+                    vEncryptionSettings = new EncryptionSettings();
                 }
                 vEncryptionSettings.Enabled = this.EncryptionSettingsEnabled;
             }
@@ -204,7 +207,7 @@ namespace Microsoft.Azure.Commands.Compute.Automation
             {
                 if (vEncryptionSettings == null)
                 {
-                    vEncryptionSettings = new Microsoft.Azure.Management.Compute.Models.EncryptionSettings();
+                    vEncryptionSettings = new EncryptionSettings();
                 }
                 vEncryptionSettings.DiskEncryptionKey = this.DiskEncryptionKey;
             }
@@ -213,7 +216,7 @@ namespace Microsoft.Azure.Commands.Compute.Automation
             {
                 if (vEncryptionSettings == null)
                 {
-                    vEncryptionSettings = new Microsoft.Azure.Management.Compute.Models.EncryptionSettings();
+                    vEncryptionSettings = new EncryptionSettings();
                 }
                 vEncryptionSettings.KeyEncryptionKey = this.KeyEncryptionKey;
             }
@@ -221,8 +224,10 @@ namespace Microsoft.Azure.Commands.Compute.Automation
             var vDisk = new PSDisk
             {
                 Zones = this.MyInvocation.BoundParameters.ContainsKey("Zone") ? this.Zone : null,
-                OsType = this.MyInvocation.BoundParameters.ContainsKey("OsType") ? this.OsType : (OperatingSystemTypes?) null,
-                DiskSizeGB = this.MyInvocation.BoundParameters.ContainsKey("DiskSizeGB") ? this.DiskSizeGB : (int?) null,
+                OsType = this.MyInvocation.BoundParameters.ContainsKey("OsType") ? this.OsType : (OperatingSystemTypes?)null,
+                DiskSizeGB = this.MyInvocation.BoundParameters.ContainsKey("DiskSizeGB") ? this.DiskSizeGB : (int?)null,
+                DiskIOPSReadWrite = this.MyInvocation.BoundParameters.ContainsKey("DiskIOPSReadWrite") ? this.DiskIOPSReadWrite : (int?)null,
+                DiskMBpsReadWrite = this.MyInvocation.BoundParameters.ContainsKey("DiskMBpsReadWrite") ? this.DiskMBpsReadWrite : (int?)null,
                 Location = this.MyInvocation.BoundParameters.ContainsKey("Location") ? this.Location : null,
                 Tags = this.MyInvocation.BoundParameters.ContainsKey("Tag") ? this.Tag.Cast<DictionaryEntry>().ToDictionary(ht => (string)ht.Key, ht => (string)ht.Value) : null,
                 Sku = vSku,
@@ -234,4 +239,3 @@ namespace Microsoft.Azure.Commands.Compute.Automation
         }
     }
 }
-

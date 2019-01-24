@@ -14,6 +14,11 @@
 
 using Microsoft.Azure.Commands.Common.Authentication;
 using Microsoft.Azure.Commands.Common.Authentication.Abstractions;
+// TODO: Remove IfDef
+#if NETSTANDARD
+using Microsoft.Azure.Commands.Common.Authentication.Abstractions.Core;
+using Microsoft.Azure.Commands.Profile.Models.Core;
+#endif
 using Microsoft.Azure.Commands.Common.Authentication.Models;
 using Microsoft.Azure.Commands.Profile.Models;
 using Microsoft.Azure.Commands.ScenarioTest;
@@ -101,21 +106,27 @@ namespace Microsoft.Azure.Commands.Profile.Test
 #endif
         }
 
-        public static void RunDataProfileTest(IAzureContextContainer rmProfile, IAzureContextContainer smProfile, Action testAction)
+        private static void RunDataProfileTest(IAzureContextContainer rmProfile, IAzureContextContainer smProfile, Action testAction)
         {
             AzureSession.Instance.DataStore = new MemoryDataStore();
             var savedRmProfile = AzureRmProfileProvider.Instance.Profile;
+#if !NETSTANDARD
             var savedSmProfile = AzureSMProfileProvider.Instance.Profile;
+#endif
             try
             {
                 AzureRmProfileProvider.Instance.Profile = rmProfile;
+#if !NETSTANDARD
                 AzureSMProfileProvider.Instance.Profile = smProfile;
+#endif
                 testAction();
             }
             finally
             {
                 AzureRmProfileProvider.Instance.Profile = savedRmProfile;
+#if !NETSTANDARD
                 AzureSMProfileProvider.Instance.Profile = savedSmProfile;
+#endif
             }
         }
 

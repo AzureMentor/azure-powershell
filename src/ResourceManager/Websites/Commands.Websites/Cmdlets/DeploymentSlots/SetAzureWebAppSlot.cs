@@ -14,22 +14,27 @@
 
 
 using Microsoft.Azure.Commands.WebApps.Utilities;
+using Microsoft.Azure.Commands.WebApps.Models;
 using Microsoft.Azure.Management.WebSites.Models;
+using Microsoft.WindowsAzure.Commands.Common;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
+using System.Security;
+using Microsoft.Azure.Commands.ResourceManager.Common.ArgumentCompleters;
 
 namespace Microsoft.Azure.Commands.WebApps.Cmdlets.DeploymentSlots
 {
     /// <summary>
     /// this commandlet will let you create a new Azure Web app using ARM APIs
     /// </summary>
-    [Cmdlet(VerbsCommon.Set, "AzureRmWebAppSlot")]
+    [Cmdlet("Set", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "WebAppSlot"), OutputType(typeof(PSSite))]
     public class SetAzureWebAppSlotCmdlet : WebAppSlotBaseCmdlet
     {
         [Parameter(Position = 3, Mandatory = false, HelpMessage = "The name of the app service plan eg: Default1.")]
+        [ResourceNameCompleter("Microsoft.Web/serverfarms", "DoNotFilter")]
         public string AppServicePlan { get; set; }
 
         [Parameter(Position = 4, Mandatory = false, HelpMessage = "Default documents for web app")]
@@ -86,18 +91,48 @@ namespace Microsoft.Azure.Commands.WebApps.Cmdlets.DeploymentSlots
         [ValidateNotNullOrEmpty]
         public int NumberOfWorkers { get; set; }
 
+        [Parameter(Mandatory = false, HelpMessage = "Container Image Name", ParameterSetName = ParameterSet1Name)]
+        [ValidateNotNullOrEmpty]
+        public string ContainerImageName { get; set; }
+
+        [Parameter(Mandatory = false, HelpMessage = "Private Container Registry Server Url", ParameterSetName = ParameterSet1Name)]
+        [ValidateNotNullOrEmpty]
+        public string ContainerRegistryUrl { get; set; }
+
+        [Parameter(Mandatory = false, HelpMessage = "Private Container Registry Username", ParameterSetName = ParameterSet1Name)]
+        [ValidateNotNullOrEmpty]
+        public string ContainerRegistryUser { get; set; }
+
+        [Parameter(Mandatory = false, HelpMessage = "Private Container Registry Password", ParameterSetName = ParameterSet1Name)]
+        [ValidateNotNullOrEmpty]
+        public SecureString ContainerRegistryPassword { get; set; }
+
+        [Parameter(Mandatory = false, HelpMessage = "Enables/Disables container continuous deployment webhook", ParameterSetName = ParameterSet1Name)]
+        public bool EnableContainerContinuousDeployment  { get; set; }
+
         [Parameter(Mandatory = false, HelpMessage = "Run cmdlet in the background")]
         public SwitchParameter AsJob { get; set; }
+
+        [Parameter(ParameterSetName = ParameterSet1Name, Mandatory = false, HelpMessage = "Enable MSI on an existing azure webapp")]
+        public bool AssignIdentity { get; set; }
+
+        [Parameter(ParameterSetName = ParameterSet1Name, Mandatory = false, HelpMessage = "Enable/disable redirecting all traffic to HTTPS on an existing azure webapp")]
+        public bool HttpsOnly { get; set; }
+
+        [Parameter(ParameterSetName = ParameterSet1Name, Mandatory = false, HelpMessage = "Azure Storage to mount inside a Web App for Container. Use New-AzureRmWebAppAzureStoragePath to create it")]
+        public WebAppAzureStoragePath[] AzureStoragePath { get; set; }
+
 
         public override void ExecuteCmdlet()
         {
             base.ExecuteCmdlet();
             SiteConfig siteConfig = null;
+            Site site = null;
             string location = null;
             switch (ParameterSetName)
             {
                 case ParameterSet1Name:
-                    WebApp = WebsitesClient.GetWebApp(ResourceGroupName, Name, Slot);
+                    WebApp = new PSSite(WebsitesClient.GetWebApp(ResourceGroupName, Name, Slot));
                     location = WebApp.Location;
                     var parameters = new HashSet<string>(MyInvocation.BoundParameters.Keys, StringComparer.OrdinalIgnoreCase);
                     if (parameters.Any(p => CmdletHelpers.SiteConfigParameters.Contains(p)))
@@ -106,7 +141,7 @@ namespace Microsoft.Azure.Commands.WebApps.Cmdlets.DeploymentSlots
                         {
                             DefaultDocuments = parameters.Contains("DefaultDocuments") ? DefaultDocuments : null,
                             NetFrameworkVersion = parameters.Contains("NetFrameworkVersion") ? NetFrameworkVersion : null,
-                            PhpVersion = parameters.Contains("PhpVersion") ? PhpVersion : null,
+                            PhpVersion = parameters.Contains("PhpVersion") ? PhpVersion.ToLower() == "off" ? "" : PhpVersion : null,
                             RequestTracingEnabled =
                                 parameters.Contains("RequestTracingEnabled") ? (bool?)RequestTracingEnabled : null,
                             HttpLoggingEnabled = parameters.Contains("HttpLoggingEnabled") ? (bool?)HttpLoggingEnabled : null,
@@ -125,14 +160,85 @@ namespace Microsoft.Azure.Commands.WebApps.Cmdlets.DeploymentSlots
                         };
                     }
 
+                    Hashtable appSettings = AppSettings ?? new Hashtable();
+
+                    if (siteConfig == null)
+                    {
+                        siteConfig = WebApp.SiteConfig;
+                    }
+
+                    //According to current implementation if AppSettings paramter is provided we are overriding existing AppSettings
+                    if (WebApp.SiteConfig.AppSettings != null && AppSettings == null)
+                    {
+                        foreach (var setting in WebApp.SiteConfig.AppSettings)
+                        {
+                            appSettings[setting.Name] = setting.Value;
+                        }
+                    }
+
+                    if (ContainerImageName != null)
+                    {
+                        string dockerImage = CmdletHelpers.DockerImagePrefix + ContainerImageName;
+                        if (WebApp.IsXenon.GetValueOrDefault())
+                        {
+                            siteConfig.WindowsFxVersion = dockerImage;
+                        }
+                        else if (WebApp.Reserved.GetValueOrDefault())
+                        {
+                            siteConfig.LinuxFxVersion = dockerImage;
+                        }
+                    }
+                    
+
+                    if (ContainerRegistryUrl != null)
+                    {
+                        appSettings[CmdletHelpers.DocerRegistryServerUrl] = ContainerRegistryUrl;
+                    }
+                    if (ContainerRegistryUser != null)
+                    {
+                        appSettings[CmdletHelpers.DocerRegistryServerUserName] = ContainerRegistryUser;
+                    }
+                    if (ContainerRegistryPassword != null)
+                    {
+                        appSettings[CmdletHelpers.DocerRegistryServerPassword] = ContainerRegistryPassword.ConvertToString();
+                    }
+
+                    if (parameters.Contains("EnableContainerContinuousDeployment"))
+                    {
+                        if (EnableContainerContinuousDeployment )
+                        {
+                            appSettings[CmdletHelpers.DockerEnableCI] = "true";
+                        }
+                        else
+                        {
+                            appSettings.Remove(CmdletHelpers.DockerEnableCI);
+
+                        }
+                    }
                     // Update web app configuration
-                    WebsitesClient.UpdateWebAppConfiguration(ResourceGroupName, location, Name, Slot, siteConfig, AppSettings.ConvertToStringDictionary(), ConnectionStrings.ConvertToConnectionStringDictionary());
+                    WebsitesClient.UpdateWebAppConfiguration(ResourceGroupName, location, Name, Slot, siteConfig, appSettings.ConvertToStringDictionary(), ConnectionStrings.ConvertToConnectionStringDictionary(), AzureStoragePath.ConvertToAzureStorageAccountPathPropertyDictionary());
+
+                    //update reference to WebApp object after site configuration update
+                    WebApp = new PSSite(WebsitesClient.GetWebApp(ResourceGroupName, Name, Slot));
+
+                    if (parameters.Any(p => CmdletHelpers.SiteParameters.Contains(p)))
+                    {
+
+                        site = new Site
+                        {
+                            Location = location,
+                            ServerFarmId = WebApp.ServerFarmId,
+                            Identity = parameters.Contains("AssignIdentity") ? AssignIdentity ? new ManagedServiceIdentity("SystemAssigned", null, null) : new ManagedServiceIdentity("None", null, null) : WebApp.Identity,
+                            HttpsOnly = parameters.Contains("HttpsOnly") ? HttpsOnly : WebApp.HttpsOnly
+                        };
+
+                        WebsitesClient.UpdateWebApp(ResourceGroupName, location, Name, Slot, WebApp.ServerFarmId, new PSSite(site));
+                    }
 
                     if (parameters.Contains("AppServicePlan"))
                     {
                         WebsitesClient.UpdateWebApp(ResourceGroupName, location, Name, Slot, AppServicePlan);
                     }
-
 
                     break;
                 case ParameterSet2Name:
@@ -173,7 +279,7 @@ namespace Microsoft.Azure.Commands.WebApps.Cmdlets.DeploymentSlots
                     break;
             }
 
-            WriteObject(WebsitesClient.GetWebApp(ResourceGroupName, Name, Slot));
+            WriteObject(new PSSite(WebsitesClient.GetWebApp(ResourceGroupName, Name, Slot)));
         }
     }
 }

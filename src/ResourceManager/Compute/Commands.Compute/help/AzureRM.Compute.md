@@ -1,7 +1,7 @@
-﻿---
+---
 Module Name: AzureRM.Compute
 Module Guid: 0a83c907-1ffb-4d87-a492-c65ac7d7ed37
-Download Help Link: 
+Download Help Link: https://docs.microsoft.com/en-us/powershell/module/azurerm.compute
 Help Version: 3.5.0.0
 Locale: en-US
 ---
@@ -24,7 +24,7 @@ Uploads a virtual hard disk from an on-premises virtual machine to a blob in a c
 Adds information to the unattended Windows Setup answer file.
 
 ### [Add-AzureRmVMDataDisk](Add-AzureRmVMDataDisk.md)
-Adds a data disk to a virtual machine.
+Adds a data disk to a virtual machine or a Vmss VM.
 
 ### [Add-AzureRmVMNetworkInterface](Add-AzureRmVMNetworkInterface.md)
 Adds a network interface to a virtual machine.
@@ -56,6 +56,9 @@ Adds a secret to a VMSS.
 ### [Add-AzureRmVmssSshPublicKey](Add-AzureRmVmssSshPublicKey.md)
 Adds SSH public keys to the VMSS.
 
+### [Add-AzureRmVmssVMDataDisk](Add-AzureRmVmssVMDataDisk.md)
+Adds a data disk to a Vmss VM.
+
 ### [Add-AzureRmVmssWinRMListener](Add-AzureRmVmssWinRMListener.md)
 Adds a WinRM listener to the VMSS.
 
@@ -85,6 +88,15 @@ Gets a container service.
 
 ### [Get-AzureRmDisk](Get-AzureRmDisk.md)
 Gets the properties of a Managed disk.
+
+### [Get-AzureRmGallery](Get-AzureRmGallery.md)
+Get or list galleries.
+
+### [Get-AzureRmGalleryImageDefinition](Get-AzureRmGalleryImageDefinition.md)
+Get or list gallery image definitions.
+
+### [Get-AzureRmGalleryImageVersion](Get-AzureRmGalleryImageVersion.md)
+Get or list gallery image versions.
 
 ### [Get-AzureRmImage](Get-AzureRmImage.md)
 Gets the properties of an image.
@@ -188,6 +200,9 @@ Grants an access to a snapshot.
 ### [Invoke-AzureRmVMRunCommand](Invoke-AzureRmVMRunCommand.md)
 Run command on the VM.
 
+### [Invoke-AzureRmVmssVMRunCommand](Invoke-AzureRmVmssVMRunCommand.md)
+Run command on the Virtual Machine Scale Set VM.
+
 ### [New-AzureRmAvailabilitySet](New-AzureRmAvailabilitySet.md)
 Creates an Azure availability set.
 
@@ -205,6 +220,15 @@ Creates a configurable disk object.
 
 ### [New-AzureRmDiskUpdateConfig](New-AzureRmDiskUpdateConfig.md)
 Creates a configurable disk update object.
+
+### [New-AzureRmGallery](New-AzureRmGallery.md)
+Create a gallery.
+
+### [New-AzureRmGalleryImageDefinition](New-AzureRmGalleryImageDefinition.md)
+Create a gallery image definition.
+
+### [New-AzureRmGalleryImageVersion](New-AzureRmGalleryImageVersion.md)
+Create a gallery image version.
 
 ### [New-AzureRmImage](New-AzureRmImage.md)
 Creats an image.
@@ -227,6 +251,9 @@ Creates a virtual machine.
 ### [New-AzureRmVMConfig](New-AzureRmVMConfig.md)
 Creates a configurable virtual machine object.
 
+### [New-AzureRmVMDataDisk](New-AzureRmVMDataDisk.md)
+Creates a local data disk object for a virtual machine or a Vmss VM.
+
 ### [New-AzureRmVMSqlServerAutoBackupConfig](New-AzureRmVMSqlServerAutoBackupConfig.md)
 Creates a configuration object for SQL Server automatic backup.
 
@@ -245,6 +272,9 @@ Creates a VMSS configuration object.
 ### [New-AzureRmVmssIpConfig](New-AzureRmVmssIpConfig.md)
 Creates an IP configuration for a network interface of a VMSS.
 
+### [New-AzureRmVmssIpTagConfig](New-AzureRmVmssIpTagConfig.md)
+Creates an IP Tag object for a network interface of a VMSS.
+
 ### [New-AzureRmVmssVaultCertificateConfig](New-AzureRmVmssVaultCertificateConfig.md)
 Creates a Key Vault certificate configuration.
 
@@ -262,6 +292,15 @@ Removes an agent pool profile from a container service.
 
 ### [Remove-AzureRmDisk](Remove-AzureRmDisk.md)
 Removes a disk.
+
+### [Remove-AzureRmGallery](Remove-AzureRmGallery.md)
+Delete a gallery.
+
+### [Remove-AzureRmGalleryImageDefinition](Remove-AzureRmGalleryImageDefinition.md)
+Delete a gallery image definition.
+
+### [Remove-AzureRmGalleryImageVersion](Remove-AzureRmGalleryImageVersion.md)
+Delete a gallery image version.
 
 ### [Remove-AzureRmImage](Remove-AzureRmImage.md)
 Removes an image.
@@ -328,6 +367,12 @@ Removes an extension from the VMSS.
 
 ### [Remove-AzureRmVmssNetworkInterfaceConfiguration](Remove-AzureRmVmssNetworkInterfaceConfiguration.md)
 Removes a network interface configuration from a VMSS.
+
+### [Remove-AzureRmVmssVMDataDisk](Remove-AzureRmVmssVMDataDisk.md)
+Removes a data disk from a virtual machine scale set VM
+
+### [Repair-AzureRmVmssServiceFabricUpdateDomain](Repair-AzureRmVmssServiceFabricUpdateDomain.md)
+Manual platform update domain walk to update virtual machines in a service fabric virtual machine scale set.
 
 ### [Restart-AzureRmVM](Restart-AzureRmVM.md)
 Restarts an Azure virtual machine.
@@ -488,6 +533,15 @@ Updates the state of a container service.
 ### [Update-AzureRmDisk](Update-AzureRmDisk.md)
 Updates a disk.
 
+### [Update-AzureRmGallery](Update-AzureRmGallery.md)
+Update a gallery.
+
+### [Update-AzureRmGalleryImageDefinition](Update-AzureRmGalleryImageDefinition.md)
+Update a gallery image definition.
+
+### [Update-AzureRmGalleryImageVersion](Update-AzureRmGalleryImageVersion.md)
+Update a gallery image version.
+
 ### [Update-AzureRmImage](Update-AzureRmImage.md)
 Updates an image.
 
@@ -502,4 +556,7 @@ Updates the state of a VMSS.
 
 ### [Update-AzureRmVmssInstance](Update-AzureRmVmssInstance.md)
 Starts a manual upgrade of the VMSS instance.
+
+### [Update-AzureRmVmssVM](Update-AzureRmVmssVM.md)
+Updates the state of a Vmss VM.
 

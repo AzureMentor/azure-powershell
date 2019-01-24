@@ -15,7 +15,7 @@ Sets a certificate issuer in a key vault.
 
 ### Expanded (Default)
 ```
-Set-AzureKeyVaultCertificateIssuer [-VaultName] <String> [-Name] <String> [-IssuerProvider <String>]
+Set-AzureKeyVaultCertificateIssuer [-VaultName] <String> [-Name] <String> -IssuerProvider <String>
  [-AccountId <String>] [-ApiKey <SecureString>]
  [-OrganizationDetails <PSKeyVaultCertificateOrganizationDetails>] [-PassThru]
  [-DefaultProfile <IAzureContextContainer>] [-WhatIf] [-Confirm] [<CommonParameters>]
@@ -34,11 +34,21 @@ The Set-AzureKeyVaultCertificateIssuer cmdlet sets a certificate issuer in a key
 ## EXAMPLES
 
 ### Example 1: Set a certificate issuer
-```
-PS C:\>$Issuer = Set-AzureKeyVaultCertificateIssuer -VaultName "Contosokv01" -Name "TestIssuer01" -IssuerProvider "Test" -AccountId "555" -ApiKey $Password -OrganizationDetails $OrgDetails -PassThru
+```powershell
+PS C:\> $AdminDetails = New-AzureKeyVaultCertificateAdministratorDetails -FirstName user -LastName name -EmailAddress username@microsoft.com
+PS C:\> $OrgDetails = New-AzureKeyVaultCertificateOrganizationDetails -AdministrationDetails $AdminDetails
+PS C:\> $Password = ConvertTo-SecureString -String P@ssw0rd -AsPlainText -Force
+PS C:\> Set-AzureKeyVaultCertificateIssuer -VaultName "Contosokv01" -Name "TestIssuer01" -IssuerProvider "Test" -AccountId "555" -ApiKey $Password -OrganizationDetails $OrgDetails -PassThru
+
+AccountId           : 555
+ApiKey              :
+OrganizationDetails : Microsoft.Azure.Commands.KeyVault.Models.PSKeyVaultCertificateOrganizationDetails
+Name                : TestIssuer01
+IssuerProvider      : Test
+VaultName           : Contosokv01
 ```
 
-This command sets the properties for a certificate issuer, and then stores it in the $Issuer variable.
+This command sets the properties for a certificate issuer.
 
 ## PARAMETERS
 
@@ -46,14 +56,14 @@ This command sets the properties for a certificate issuer, and then stores it in
 Specifies the account ID for the certificate issuer.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: Expanded
 Aliases:
 
 Required: False
 Position: Named
 Default value: None
-Accept pipeline input: True (ByPropertyName)
+Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
@@ -61,14 +71,14 @@ Accept wildcard characters: False
 Specifies the API key for the certificate issuer.
 
 ```yaml
-Type: SecureString
+Type: System.Security.SecureString
 Parameter Sets: Expanded
 Aliases:
 
 Required: False
 Position: Named
 Default value: None
-Accept pipeline input: True (ByPropertyName)
+Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
@@ -76,7 +86,7 @@ Accept wildcard characters: False
 The credentials, account, tenant, and subscription used for communication with azure
 
 ```yaml
-Type: IAzureContextContainer
+Type: Microsoft.Azure.Commands.Common.Authentication.Abstractions.IAzureContextContainer
 Parameter Sets: (All)
 Aliases: AzureRmContext, AzureCredential
 
@@ -91,14 +101,14 @@ Accept wildcard characters: False
 Specifies the certificate issuer to set.
 
 ```yaml
-Type: PSKeyVaultCertificateIssuerIdentityItem
+Type: Microsoft.Azure.Commands.KeyVault.Models.PSKeyVaultCertificateIssuerIdentityItem
 Parameter Sets: ByValue
 Aliases: Issuer
 
 Required: True
 Position: Named
 Default value: None
-Accept pipeline input: True (ByPropertyName, ByValue)
+Accept pipeline input: True (ByValue)
 Accept wildcard characters: False
 ```
 
@@ -106,14 +116,14 @@ Accept wildcard characters: False
 Specifies the type of certificate issuer.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: Expanded
 Aliases:
 
-Required: False
+Required: True
 Position: Named
 Default value: None
-Accept pipeline input: True (ByPropertyName)
+Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
@@ -121,14 +131,14 @@ Accept wildcard characters: False
 Specifies the name of the Issuer.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
 Aliases: IssuerName
 
 Required: True
 Position: 1
 Default value: None
-Accept pipeline input: True (ByPropertyName)
+Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
@@ -136,14 +146,14 @@ Accept wildcard characters: False
 Organization details to be used with the issuer.
 
 ```yaml
-Type: PSKeyVaultCertificateOrganizationDetails
+Type: Microsoft.Azure.Commands.KeyVault.Models.PSKeyVaultCertificateOrganizationDetails
 Parameter Sets: Expanded
 Aliases:
 
 Required: False
 Position: Named
 Default value: None
-Accept pipeline input: True (ByPropertyName)
+Accept pipeline input: True (ByValue)
 Accept wildcard characters: False
 ```
 
@@ -152,7 +162,7 @@ Returns an object representing the item with which you are working.
 By default, this cmdlet does not generate any output.
 
 ```yaml
-Type: SwitchParameter
+Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
 Aliases:
 
@@ -167,14 +177,14 @@ Accept wildcard characters: False
 Specifies the name of the key vault.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
 Aliases:
 
 Required: True
 Position: 0
 Default value: None
-Accept pipeline input: True (ByPropertyName)
+Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
@@ -182,7 +192,7 @@ Accept wildcard characters: False
 Prompts you for confirmation before running the cmdlet.
 
 ```yaml
-Type: SwitchParameter
+Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
 Aliases: cf
 
@@ -198,7 +208,7 @@ Shows what would happen if the cmdlet runs.
 The cmdlet is not run.
 
 ```yaml
-Type: SwitchParameter
+Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
 Aliases: wi
 
@@ -214,8 +224,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
-This cmdlet does not accept any input.
+### Microsoft.Azure.Commands.KeyVault.Models.PSKeyVaultCertificateOrganizationDetails
+Parameters: OrganizationDetails (ByValue)
+
+### Microsoft.Azure.Commands.KeyVault.Models.PSKeyVaultCertificateIssuerIdentityItem
+Parameters: InputObject (ByValue)
 
 ## OUTPUTS
 

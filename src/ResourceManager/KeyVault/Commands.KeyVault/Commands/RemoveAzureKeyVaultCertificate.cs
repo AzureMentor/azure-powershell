@@ -16,17 +16,14 @@ using System.Globalization;
 using System.Management.Automation;
 using Microsoft.Azure.Commands.KeyVault.Models;
 using Microsoft.Azure.Commands.KeyVault.Properties;
+using Microsoft.Azure.Commands.ResourceManager.Common.ArgumentCompleters;
 
 namespace Microsoft.Azure.Commands.KeyVault
 {
     /// <summary>
     /// The Remove-AzureKeyVaultCertificate cmdlet deletes a certificate in an Azure Key Vault. 
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, CmdletNoun.AzureKeyVaultCertificate,
-        SupportsShouldProcess = true,
-        DefaultParameterSetName = ByVaultNameAndNameParameterSet,
-        ConfirmImpact = ConfirmImpact.High,
-        HelpUri = Constants.KeyVaultHelpUri)]
+    [Cmdlet("Remove", ResourceManager.Common.AzureRMConstants.AzurePrefix + "KeyVaultCertificate",SupportsShouldProcess = true,DefaultParameterSetName = ByVaultNameAndNameParameterSet)]
     [OutputType(typeof(PSDeletedKeyVaultCertificate))]
     public class RemoveAzureKeyVaultCertificate : KeyVaultCmdletBase
     {
@@ -45,8 +42,8 @@ namespace Microsoft.Azure.Commands.KeyVault
         [Parameter(Mandatory = true,
                    Position = 0,
                    ParameterSetName = ByVaultNameAndNameParameterSet,
-                   ValueFromPipelineByPropertyName = true,
                    HelpMessage = "Specifies the name of the vault to which this cmdlet adds the certificate.")]
+        [ResourceNameCompleter("Microsoft.KeyVault/vaults", "FakeResourceGroupName")]
         [ValidateNotNullOrEmpty]
         public string VaultName { get; set; }
 
@@ -56,7 +53,6 @@ namespace Microsoft.Azure.Commands.KeyVault
         [Parameter(Mandatory = true,
                    Position = 1,
                    ParameterSetName = ByVaultNameAndNameParameterSet,
-                   ValueFromPipelineByPropertyName = true,
                    HelpMessage = "Specifies the name of the certificate in key vault.")]
         [ValidateNotNullOrEmpty]
         public string Name { get; set; }
@@ -73,7 +69,7 @@ namespace Microsoft.Azure.Commands.KeyVault
         public PSKeyVaultCertificateIdentityItem InputObject { get; set; }
 
         /// <summary>
-        /// If present, operate on the deleted key entity.
+        /// If present, operate on the deleted entity.
         /// </summary>
         [Parameter(Mandatory = false,
                     HelpMessage = "Permanently remove the previously deleted certificate.")]
@@ -131,7 +127,7 @@ namespace Microsoft.Azure.Commands.KeyVault
                     Resources.RemoveCertWhatIfMessage,
                     Name),
                 Name,
-                () => { certBundle = PSDeletedKeyVaultCertificate.FromDeletedCertificateBundle( this.DataServiceClient.DeleteCertificate(VaultName, Name) ); });
+                () => { certBundle = this.DataServiceClient.DeleteCertificate(VaultName, Name); });
 
             if (PassThru.IsPresent)
             {

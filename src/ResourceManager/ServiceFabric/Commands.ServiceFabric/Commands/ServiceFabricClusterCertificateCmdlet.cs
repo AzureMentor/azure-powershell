@@ -24,19 +24,19 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Azure.Commands.ServiceFabric.Models;
 using Microsoft.Azure.Commands.Common.Authentication;
-using Microsoft.Azure.KeyVault.Models;
-using Microsoft.Azure.Management.KeyVault.Models;
-using Microsoft.Azure.Management.ResourceManager;
-using Microsoft.Azure.Management.ResourceManager.Models;
-using Microsoft.Azure.KeyVault;
 using Newtonsoft.Json;
 using Microsoft.Azure.Commands.ServiceFabric.Common;
-using Microsoft.Azure.Management.Compute;
-using Microsoft.Azure.Management.Compute.Models;
 using Microsoft.WindowsAzure.Commands.Common;
 using ServiceFabricProperties = Microsoft.Azure.Commands.ServiceFabric.Properties;
 using Microsoft.Azure.Commands.Common.Authentication.Abstractions;
 using Microsoft.Azure.Commands.ResourceManager.Common.ArgumentCompleters;
+using Microsoft.Azure.Commands.Common.Compute.Version_2018_04.Models;
+using Microsoft.Azure.Commands.Common.Compute.Version_2018_04;
+using Microsoft.Azure.Commands.Common.KeyVault.Version2016_10_1.Models;
+using Microsoft.Azure.KeyVault.Models;
+using Microsoft.Azure.KeyVault;
+using Microsoft.Azure.Management.Internal.Resources;
+using Microsoft.Azure.Management.Internal.Resources.Models;
 
 namespace Microsoft.Azure.Commands.ServiceFabric.Commands
 {
@@ -211,7 +211,7 @@ namespace Microsoft.Azure.Commands.ServiceFabric.Commands
                 X509CertificateProperties = new X509CertificateProperties()
                 {
                     Subject = subjectName,
-                    Ekus = new List<string> { "1.3.6.1.5.5.7.3.2" }
+                    Ekus = new List<string> { "1.3.6.1.5.5.7.3.1", "1.3.6.1.5.5.7.3.2" }
                 },
                 IssuerParameters = new IssuerParameters() { Name = Constants.SelfSignedIssuerName }
             };
@@ -268,7 +268,7 @@ namespace Microsoft.Azure.Commands.ServiceFabric.Commands
             certificateBundle = this.KeyVaultClient.GetCertificateAsync(keyVaultUrl, this.keyVaultCertificateName).Result;
             thumbprint = BitConverter.ToString(certificateBundle.X509Thumbprint).Replace("-", "");
 
-            WriteVerboseWithTimestamp(string.Format("Self signed certificate created: {0}", certificateBundle.CertificateIdentifier));
+            WriteVerboseWithTimestamp(string.Format("Self signed certificate created: {0}", certificateBundle.Id));
 
             if (!string.IsNullOrEmpty(this.CertificateOutputFolder))
             {
@@ -415,12 +415,20 @@ namespace Microsoft.Azure.Commands.ServiceFabric.Commands
         {
             var secretGroup = vmss.VirtualMachineProfile.OsProfile.Secrets.SingleOrDefault(
                 s => s.SourceVault.Id.Equals(certInformation.KeyVault.Id, StringComparison.OrdinalIgnoreCase));
+
+
+            string configStore = null;
+            if (vmss.VirtualMachineProfile.OsProfile.WindowsConfiguration != null)
+            {
+                configStore = Constants.DefaultCertificateStore;
+            }
+
             if (secretGroup == null)
             {
                 vmss.VirtualMachineProfile.OsProfile.Secrets.Add(
                     new VaultSecretGroup()
                     {
-                        SourceVault = new Management.Compute.Models.SubResource()
+                        SourceVault = new Azure.Commands.Common.Compute.Version_2018_04.Models.SubResource()
                         {
                             Id = certInformation.KeyVault.Id
                         },
@@ -428,7 +436,7 @@ namespace Microsoft.Azure.Commands.ServiceFabric.Commands
                         {
                           new VaultCertificate()
                           {
-                          CertificateStore = Constants.DefaultCertificateStore,
+                          CertificateStore = configStore,
                           CertificateUrl = certInformation.SecretUrl
                           }
                         }
@@ -449,7 +457,7 @@ namespace Microsoft.Azure.Commands.ServiceFabric.Commands
                         secretGroup.VaultCertificates.Add(
                             new VaultCertificate()
                             {
-                                CertificateStore = Constants.DefaultCertificateStore,
+                                CertificateStore = configStore,
                                 CertificateUrl = certInformation.SecretUrl
                             });
                     }
@@ -460,7 +468,7 @@ namespace Microsoft.Azure.Commands.ServiceFabric.Commands
                     {
                         new VaultCertificate()
                         {
-                            CertificateStore = Constants.DefaultCertificateStore,
+                            CertificateStore = configStore,
                             CertificateUrl = certInformation.SecretUrl
                         }
                    };
@@ -586,7 +594,16 @@ namespace Microsoft.Azure.Commands.ServiceFabric.Commands
                 throw new PSArgumentException("secretUrl");
             }
 
-            var secretBundle = this.KeyVaultClient.GetSecretAsync(secretUrl).Result;
+            SecretBundle secretBundle;
+            try
+            {
+                secretBundle = this.KeyVaultClient.GetSecretAsync(secretUrl).Result;
+            }
+            catch (Exception ex)
+            {
+                throw GetInnerException(ex);
+            }
+
             var secretValue = secretBundle.Value;
             try
             {
@@ -615,7 +632,11 @@ namespace Microsoft.Azure.Commands.ServiceFabric.Commands
                                 jsonBlob.Password,
                                 X509KeyStorageFlags.Exportable);
 
-                            return certCollection[0].Thumbprint;
+                            var lastCert = certCollection.Count > 0 ? certCollection[certCollection.Count - 1] : null;
+                            if (lastCert?.Thumbprint != null)
+                            {
+                                return lastCert.Thumbprint;
+                            }
                         }
                     }
                 }

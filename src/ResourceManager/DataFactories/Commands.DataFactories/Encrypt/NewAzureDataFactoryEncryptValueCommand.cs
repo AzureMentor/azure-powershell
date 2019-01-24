@@ -22,7 +22,7 @@ using System.Security.Permissions;
 
 namespace Microsoft.Azure.Commands.DataFactories
 {
-    [Cmdlet(VerbsCommon.New, Constants.EncryptString, DefaultParameterSetName = ByFactoryName), OutputType(typeof(string))]
+    [Cmdlet("New", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "DataFactoryEncryptValue", DefaultParameterSetName = ByFactoryName), OutputType(typeof(string))]
     public class NewAzureDataFactoryEncryptValueCommand : DataFactoryBaseCmdlet
     {
         [Parameter(ParameterSetName = ByFactoryObject, Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true,
@@ -74,7 +74,6 @@ namespace Microsoft.Azure.Commands.DataFactories
         [Parameter(ParameterSetName = ByFactoryName, Position = 9, Mandatory = false, HelpMessage = "The database name.")]
         public string Database { get; set; }
 
-        [EnvironmentPermission(SecurityAction.Demand, Unrestricted = true)]
         public override void ExecuteCmdlet()
         {
             if (ParameterSetName == ByFactoryObject)

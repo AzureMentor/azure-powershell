@@ -32,8 +32,20 @@ Caller needs to have 'recover' permission in order to perform this operation.
 ## EXAMPLES
 
 ### Example 1
-```
-PS C:\>Undo-AzureKeyVaultKeyRemoval -VaultName 'MyKeyVault' -Name 'MyKey'
+```powershell
+PS C:\> Undo-AzureKeyVaultKeyRemoval -VaultName 'MyKeyVault' -Name 'MyKey'
+
+Vault Name     : MyKeyVault
+Name           : MyKey
+Version        : 1af807cc331a49d0b52b7c75e1b2366e
+Id             : https://mykeybault.vault.azure.net:443/keys/mykey/1af807cc331a49d0b52b7c75e1b2366e
+Enabled        : True
+Expires        :
+Not Before     :
+Created        : 5/24/2018 8:32:27 PM
+Updated        : 5/24/2018 8:32:27 PM
+Purge Disabled : False
+Tags           :
 ```
 
 This command will recover the key 'MyKey' that was previously deleted, into an active and usable state.
@@ -44,7 +56,7 @@ This command will recover the key 'MyKey' that was previously deleted, into an a
 The credentials, account, tenant, and subscription used for communication with azure
 
 ```yaml
-Type: IAzureContextContainer
+Type: Microsoft.Azure.Commands.Common.Authentication.Abstractions.IAzureContextContainer
 Parameter Sets: (All)
 Aliases: AzureRmContext, AzureCredential
 
@@ -59,7 +71,7 @@ Accept wildcard characters: False
 Deleted key object
 
 ```yaml
-Type: PSDeletedKeyVaultKeyIdentityItem
+Type: Microsoft.Azure.Commands.KeyVault.Models.PSDeletedKeyVaultKeyIdentityItem
 Parameter Sets: InputObject
 Aliases:
 
@@ -75,14 +87,14 @@ Key name.
 Cmdlet constructs the FQDN of a key from vault name, currently selected environment and key name.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: Default
 Aliases: KeyName
 
 Required: True
 Position: 1
 Default value: None
-Accept pipeline input: True (ByPropertyName)
+Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
@@ -91,14 +103,14 @@ Vault name.
 Cmdlet constructs the FQDN of a vault based on the name and currently selected environment.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: Default
 Aliases:
 
 Required: True
 Position: 0
 Default value: None
-Accept pipeline input: True (ByPropertyName)
+Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
@@ -106,7 +118,7 @@ Accept wildcard characters: False
 Prompts you for confirmation before running the cmdlet.
 
 ```yaml
-Type: SwitchParameter
+Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
 Aliases: cf
 
@@ -122,7 +134,7 @@ Shows what would happen if the cmdlet runs.
 The cmdlet is not run.
 
 ```yaml
-Type: SwitchParameter
+Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
 Aliases: wi
 
@@ -138,7 +150,8 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String
+### Microsoft.Azure.Commands.KeyVault.Models.PSDeletedKeyVaultKeyIdentityItem
+Parameters: InputObject (ByValue)
 
 ## OUTPUTS
 

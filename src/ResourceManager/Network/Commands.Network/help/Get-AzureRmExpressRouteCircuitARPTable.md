@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: Microsoft.Azure.Commands.Network.dll-Help.xml
 Module Name: AzureRM.Network
 ms.assetid: F0370845-13D9-4FB5-B30E-826A22EBC5E0
@@ -37,7 +37,7 @@ Get-AzureRmExpressRouteCircuitARPTable -ResourceGroupName $RG -ExpressRouteCircu
 The credentials, account, tenant, and subscription used for communication with azure.
 
 ```yaml
-Type: IAzureContextContainer
+Type: Microsoft.Azure.Commands.Common.Authentication.Abstractions.IAzureContextContainer
 Parameter Sets: (All)
 Aliases: AzureRmContext, AzureCredential
 
@@ -52,9 +52,9 @@ Accept wildcard characters: False
 The acceptable values for this parameter are: `Primary` or `Secondary`
 
 ```yaml
-Type: DevicePathEnum
+Type: Microsoft.Azure.Commands.Network.DevicePathEnum
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 Accepted values: Primary, Secondary
 
 Required: True
@@ -68,7 +68,7 @@ Accept wildcard characters: False
 The name of the ExpressRoute circuit being examined.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
 Aliases: Name, ResourceName
 
@@ -84,12 +84,12 @@ The acceptable values for this parameter are: `AzurePrivatePeering`, `AzurePubli
 `MicrosoftPeering`
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 Accepted values: AzurePrivatePeering, AzurePublicPeering, MicrosoftPeering
 
-Required: False
+Required: True
 Position: Named
 Default value: None
 Accept pipeline input: False
@@ -100,9 +100,9 @@ Accept wildcard characters: False
 The name of the resource group containing the ExpressRoute circuit.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 
 Required: True
 Position: Named
@@ -116,8 +116,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
-This cmdlet does not accept any input.
+### System.String
 
 ## OUTPUTS
 

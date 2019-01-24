@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: Microsoft.Azure.Commands.Network.dll-Help.xml
 Module Name: AzureRM.Network
 ms.assetid: 78F356F6-A621-4C27-B9CC-D103E74B3A33
@@ -13,15 +13,15 @@ Gets a load balancer.
 
 ## SYNTAX
 
-### NoExpand
+### NoExpand (Default)
 ```
-Get-AzureRmLoadBalancer [-Name <String>] [-ResourceGroupName <String>]
+Get-AzureRmLoadBalancer [-ResourceGroupName <String>] [-Name <String>]
  [-DefaultProfile <IAzureContextContainer>] [<CommonParameters>]
 ```
 
 ### Expand
 ```
-Get-AzureRmLoadBalancer -Name <String> -ResourceGroupName <String> -ExpandResource <String>
+Get-AzureRmLoadBalancer -ResourceGroupName <String> -Name <String> -ExpandResource <String>
  [-DefaultProfile <IAzureContextContainer>] [<CommonParameters>]
 ```
 
@@ -44,7 +44,7 @@ A load balancer must exist before you can run this cmdlet.
 The credentials, account, tenant, and subscription used for communication with azure.
 
 ```yaml
-Type: IAzureContextContainer
+Type: Microsoft.Azure.Commands.Common.Authentication.Abstractions.IAzureContextContainer
 Parameter Sets: (All)
 Aliases: AzureRmContext, AzureCredential
 
@@ -57,9 +57,9 @@ Accept wildcard characters: False
 
 ### -ExpandResource
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: Expand
-Aliases: 
+Aliases:
 
 Required: True
 Position: Named
@@ -70,7 +70,7 @@ Accept wildcard characters: False
 
 ### -Name
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: NoExpand
 Aliases: ResourceName
 
@@ -82,7 +82,7 @@ Accept wildcard characters: False
 ```
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: Expand
 Aliases: ResourceName
 
@@ -95,9 +95,9 @@ Accept wildcard characters: False
 
 ### -ResourceGroupName
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: NoExpand
-Aliases: 
+Aliases:
 
 Required: False
 Position: Named
@@ -107,9 +107,9 @@ Accept wildcard characters: False
 ```
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: Expand
-Aliases: 
+Aliases:
 
 Required: True
 Position: Named
@@ -123,8 +123,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
-This cmdlet does not accept any input.
+### System.String
 
 ## OUTPUTS
 

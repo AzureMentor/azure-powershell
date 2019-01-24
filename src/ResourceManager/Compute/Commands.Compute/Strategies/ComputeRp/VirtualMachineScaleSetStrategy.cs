@@ -47,28 +47,32 @@ namespace Microsoft.Azure.Commands.Compute.Strategies.ComputeRp
             string adminPassword,
             string vmSize,
             int instanceCount,
+            VirtualMachineScaleSetIdentity identity,
+            Boolean singlePlacementGroup,
             UpgradeMode? upgradeMode,
             IEnumerable<int> dataDisks,
-            IList<string> zones)
+            IList<string> zones,
+            bool ultraSSDEnabled)
             => Strategy.CreateResourceConfig(
                 resourceGroup: resourceGroup,
                 name: name,
                 createModel: engine => new VirtualMachineScaleSet()
                 {
                     Zones = zones,
-
                     UpgradePolicy = new UpgradePolicy
                     {
                         Mode = upgradeMode ?? UpgradeMode.Manual
                     },
-
                     Sku = new Azure.Management.Compute.Models.Sku()
                     {
                         Capacity = instanceCount,
                         Name = vmSize,
                     },
+                    Identity = identity,
+                    SinglePlacementGroup = singlePlacementGroup,
                     VirtualMachineProfile = new VirtualMachineScaleSetVMProfile
                     {
+                        AdditionalCapabilities = ultraSSDEnabled ? new AdditionalCapabilities(true) : null,
                         OsProfile = new VirtualMachineScaleSetOSProfile
                         {
                             ComputerNamePrefix = name.Substring(0, Math.Min(name.Length, 9)),

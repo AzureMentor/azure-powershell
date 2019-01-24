@@ -7,7 +7,7 @@
 
     ## Release X.0.0 - January 2017
 
-    The following cmdlets were affected this release:
+    The following cmdlets were affected by this release:
 
     **Cmdlet 1**
     - Description of what has changed
@@ -26,3 +26,31 @@
 -->
 
 # Upcoming Breaking Changes
+
+## Release 6.0.0 - Nov 2018
+The following properties were affected by this release:
+
+**SnapshotInfo**
+- The snapshotInfo property on the Site object is deprecated and will be removed.
+
+**AppServicePlanName**
+- The AppServicePlanName property on the AppServicePlan object is deprecated and will be removed.
+
+**GeoRegion**
+- The GeoRegion property on the Certificate object is deprecared and wil be removed.
+
+**IgnoreQuotas**
+- The IgnoreQuotas property on the CloningInfo object is deprecated and will be removed.
+
+## Release 6.0.0 - May 2018
+
+
+The following cmdlets were affected by this release:
+
+## Release 6.0.0 - May 2018
+
+**New-AzureRmAppServicePlan**
+- Output type changed from ServerFarmWithRichSku to AppServicePlan
+
+**Get-AzureRmWebApp**
+- AppServicePlan parameter type changed from ServerFarmWithRichSku to AppServicePlan

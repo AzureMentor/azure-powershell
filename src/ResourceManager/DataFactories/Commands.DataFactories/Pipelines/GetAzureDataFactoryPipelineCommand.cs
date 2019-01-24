@@ -22,7 +22,7 @@ using System.Security.Permissions;
 
 namespace Microsoft.Azure.Commands.DataFactories
 {
-    [Cmdlet(VerbsCommon.Get, Constants.Pipeline, DefaultParameterSetName = ByFactoryName), OutputType(typeof(List<PSPipeline>), typeof(PSPipeline))]
+    [Cmdlet("Get", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "DataFactoryPipeline", DefaultParameterSetName = ByFactoryName), OutputType(typeof(PSPipeline))]
     public class GetAzureDataFactoryPipelineCommand : DataFactoryBaseCmdlet
     {
         [Parameter(Position = 1, Mandatory = false, ValueFromPipelineByPropertyName = true,
@@ -39,7 +39,6 @@ namespace Microsoft.Azure.Commands.DataFactories
         [ValidateNotNullOrEmpty]
         public string DataFactoryName { get; set; }
 
-        [EnvironmentPermission(SecurityAction.Demand, Unrestricted = true)]
         public override void ExecuteCmdlet()
         {
             // ValidationNotNullOrEmpty doesn't handle whitespaces well

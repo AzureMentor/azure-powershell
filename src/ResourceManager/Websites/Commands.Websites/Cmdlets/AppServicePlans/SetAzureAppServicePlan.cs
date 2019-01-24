@@ -13,19 +13,18 @@
 // ----------------------------------------------------------------------------------
 
 using Microsoft.Azure.Commands.WebApps.Utilities;
+using Microsoft.Azure.Commands.ResourceManager.Common.ArgumentCompleters;
 using Microsoft.Azure.Management.WebSites.Models;
 using System.Management.Automation;
 using System.Text.RegularExpressions;
+using Microsoft.Azure.Commands.WebApps.Models.WebApp;
 
-#if NETSTANDARD
-using ServerFarmWithRichSku = Microsoft.Azure.Management.WebSites.Models.AppServicePlan;
-#endif
 namespace Microsoft.Azure.Commands.WebApps.Cmdlets.AppServicePlans
 {
     /// <summary>
     /// this commandlet will let you set Azure App Service Plan using ARM APIs
     /// </summary>
-    [Cmdlet(VerbsCommon.Set, "AzureRmAppServicePlan"), OutputType(typeof(ServerFarmWithRichSku))]
+    [Cmdlet("Set", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "AppServicePlan"), OutputType(typeof(PSAppServicePlan))]
     public class SetAzureAppServicePlanCmdlet : AppServicePlanBaseCmdlet
     {
         [Parameter(ParameterSetName = ParameterSet1Name, Position = 2, Mandatory = false, HelpMessage = "The name of the admin web app")]
@@ -33,14 +32,14 @@ namespace Microsoft.Azure.Commands.WebApps.Cmdlets.AppServicePlans
         public string AdminSiteName { get; set; }
 
         [Parameter(ParameterSetName = ParameterSet1Name, Position = 3, Mandatory = false, HelpMessage = "The App Service plan tier. Allowed values are [Free|Shared|Basic|Standard|Premium|PremiumV2]")]
-        [ValidateSet("Free", "Shared", "Basic", "Standard", "Premium", "PremiumV2", IgnoreCase = true)]
+        [PSArgumentCompleter("Free", "Shared", "Basic", "Standard", "Premium", "PremiumV2", "Isolated")]
         public string Tier { get; set; }
 
         [Parameter(ParameterSetName = ParameterSet1Name, Position = 4, Mandatory = false, HelpMessage = "Number of Workers to be allocated.")]
         public int NumberofWorkers { get; set; }
 
         [Parameter(ParameterSetName = ParameterSet1Name, Position = 5, Mandatory = false, HelpMessage = "Size of workers to be allocated. Allowed values are [Small|Medium|Large|ExtraLarge]")]
-        [ValidateSet("Small", "Medium", "Large", "ExtraLarge", IgnoreCase = true)]
+        [PSArgumentCompleter("Small", "Medium", "Large", "ExtraLarge")]
         public string WorkerSize { get; set; }
 
         [Parameter(ParameterSetName = ParameterSet1Name, Mandatory = false, HelpMessage = "Whether or not to enable Per Site Scaling")]
@@ -56,7 +55,7 @@ namespace Microsoft.Azure.Commands.WebApps.Cmdlets.AppServicePlans
             switch (ParameterSetName)
             {
                 case ParameterSet1Name:
-                    AppServicePlan = WebsitesClient.GetAppServicePlan(ResourceGroupName, Name);
+                    AppServicePlan = new PSAppServicePlan(WebsitesClient.GetAppServicePlan(ResourceGroupName, Name));
                     AppServicePlan.Sku.Tier = string.IsNullOrWhiteSpace(Tier) ? AppServicePlan.Sku.Tier : Tier;
                     AppServicePlan.Sku.Capacity = NumberofWorkers > 0 ? NumberofWorkers : AppServicePlan.Sku.Capacity;
                     int workerSizeAsNumber = 0;
@@ -70,7 +69,7 @@ namespace Microsoft.Azure.Commands.WebApps.Cmdlets.AppServicePlans
             AppServicePlan.Sku.Size = AppServicePlan.Sku.Name;
             AppServicePlan.Sku.Family = AppServicePlan.Sku.Name.Substring(0, 1);
 
-            WriteObject(WebsitesClient.CreateAppServicePlan(ResourceGroupName, Name, AppServicePlan.Location, AdminSiteName, AppServicePlan.Sku, null, null, AppServicePlan.PerSiteScaling), true);
+            WriteObject(new PSAppServicePlan(WebsitesClient.CreateOrUpdateAppServicePlan(ResourceGroupName, Name, AppServicePlan)), true);
         }
     }
 }

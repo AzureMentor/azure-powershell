@@ -18,14 +18,12 @@ using Microsoft.Azure.Commands.ResourceManager.Common.ArgumentCompleters;
 using Microsoft.Azure.Management.Compute.Models;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Management.Automation;
 
 namespace Microsoft.Azure.Commands.Compute
 {
-    [Cmdlet(VerbsData.Update,
-        ProfileNouns.VirtualMachine,
-        SupportsShouldProcess = true,
-        DefaultParameterSetName = ResourceGroupNameParameterSet)]
+    [Cmdlet("Update", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "VM",SupportsShouldProcess = true,DefaultParameterSetName = ResourceGroupNameParameterSet)]
     [OutputType(typeof(PSAzureOperationResponse))]
     public class UpdateAzureVMCommand : VirtualMachineBaseCmdlet
     {
@@ -52,7 +50,7 @@ namespace Microsoft.Azure.Commands.Compute
            ParameterSetName = ExplicitIdentityParameterSet,
            ValueFromPipelineByPropertyName = true,
            HelpMessage = "The resource group name.")]
-        [ResourceGroupCompleter()]
+        [ResourceGroupCompleter]
         [ValidateNotNullOrEmpty]
         public string ResourceGroupName { get; set; }
 
@@ -62,6 +60,7 @@ namespace Microsoft.Azure.Commands.Compute
            ParameterSetName = IdParameterSet,
            ValueFromPipelineByPropertyName = true,
            HelpMessage = "The resource group name.")]
+        [ResourceIdCompleter("Microsoft.Compute/virtualMachines")]
         public string Id { get; set; }
 
         [Alias("VMProfile")]
@@ -70,8 +69,6 @@ namespace Microsoft.Azure.Commands.Compute
         public PSVirtualMachine VM { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = false)]
-        [Obsolete("Update-AzureRmVm: -Tags will be removed in favor of -Tag in an upcoming breaking change release.  Please start using the -Tag parameter to avoid breaking scripts.")]
-        [Alias("Tags")]
         public Hashtable Tag { get; set; }
 
         [Parameter(
@@ -99,6 +96,11 @@ namespace Microsoft.Azure.Commands.Compute
             ValueFromPipelineByPropertyName = false)]
         public bool OsDiskWriteAccelerator { get; set; }
 
+        [Parameter(
+           Mandatory = false,
+           ValueFromPipelineByPropertyName = true)]
+        public bool UltraSSDEnabled { get; set; }
+
         [Parameter(Mandatory = false, HelpMessage = "Run cmdlet in the background")]
         public SwitchParameter AsJob { get; set; }
 
@@ -119,7 +121,7 @@ namespace Microsoft.Azure.Commands.Compute
                     {
                         DiagnosticsProfile = this.VM.DiagnosticsProfile,
                         HardwareProfile = this.VM.HardwareProfile,
-                        StorageProfile = this.VM.StorageProfile.ToSerializedStorageProfile(),
+                        StorageProfile = this.VM.StorageProfile,
                         NetworkProfile = this.VM.NetworkProfile,
                         OsProfile = this.VM.OSProfile,
                         Plan = this.VM.Plan,
@@ -127,13 +129,31 @@ namespace Microsoft.Azure.Commands.Compute
                         Location = this.VM.Location,
                         LicenseType = this.VM.LicenseType,
                         Tags = this.Tag != null ? this.Tag.ToDictionary() : this.VM.Tags,
-                        Identity = this.AssignIdentity.IsPresent ? new VirtualMachineIdentity(null, null, ResourceIdentityType.SystemAssigned) : this.VM.Identity,
+                        Identity = this.AssignIdentity.IsPresent 
+                                   ? new VirtualMachineIdentity(null, null, ResourceIdentityType.SystemAssigned, null)
+                                   : ComputeAutoMapperProfile.Mapper.Map<VirtualMachineIdentity>(this.VM.Identity),
                         Zones = (this.VM.Zones != null && this.VM.Zones.Count > 0) ? this.VM.Zones : null
                     };
 
-                    if (this.IdentityType != null)
+                    if (this.MyInvocation.BoundParameters.ContainsKey("IdentityType"))
                     {
-                        parameters.Identity = new VirtualMachineIdentity(null, null, this.IdentityType);
+                        parameters.Identity = new VirtualMachineIdentity(null, null, this.IdentityType, null);
+                    }
+
+                    if (this.MyInvocation.BoundParameters.ContainsKey("IdentityId"))
+                    {
+                        if (parameters.Identity == null)
+                        {
+                            parameters.Identity = new VirtualMachineIdentity();
+
+                        }
+
+                        parameters.Identity.UserAssignedIdentities = new Dictionary<string, VirtualMachineIdentityUserAssignedIdentitiesValue>();
+
+                        foreach (var id in this.IdentityId)
+                        {
+                            parameters.Identity.UserAssignedIdentities.Add(id, new VirtualMachineIdentityUserAssignedIdentitiesValue());
+                        }
                     }
 
                     if (this.MyInvocation.BoundParameters.ContainsKey("OsDiskWriteAccelerator"))
@@ -149,12 +169,13 @@ namespace Microsoft.Azure.Commands.Compute
                         parameters.StorageProfile.OsDisk.WriteAcceleratorEnabled = this.OsDiskWriteAccelerator;
                     }
 
-                    if (this.IdentityId != null)
+                    if (this.MyInvocation.BoundParameters.ContainsKey("UltraSSDEnabled"))
                     {
-                        if (parameters.Identity != null)
+                        if (parameters.AdditionalCapabilities == null)
                         {
-                            parameters.Identity.IdentityIds = this.IdentityId;
+                            parameters.AdditionalCapabilities = new AdditionalCapabilities();
                         }
+                        parameters.AdditionalCapabilities.UltraSSDEnabled = this.UltraSSDEnabled;
                     }
 
                     var op = this.VirtualMachineClient.CreateOrUpdateWithHttpMessagesAsync(

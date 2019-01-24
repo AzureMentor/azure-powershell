@@ -25,7 +25,7 @@ namespace Microsoft.Azure.Commands.Resources
     /// <summary>
     /// Get the available role Definitions for certain resource types.
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "AzureRmRoleDefinition"), OutputType(typeof(List<PSRoleDefinition>))]
+    [Cmdlet("Get", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "RoleDefinition", DefaultParameterSetName = ParameterSet.RoleDefinitionName), OutputType(typeof(PSRoleDefinition))]
     public class GetAzureRoleDefinitionCommand : ResourcesBaseCmdlet
     {
         [Parameter(Position = 0, Mandatory = false, ValueFromPipelineByPropertyName = true, ParameterSetName = ParameterSet.RoleDefinitionName, HelpMessage = "Role definition name. For e.g. Reader, Contributor, Virtual Machine Contributor.")]
@@ -46,31 +46,33 @@ namespace Microsoft.Azure.Commands.Resources
             HelpMessage = "If specified, only displays the custom created roles in the directory.")]
         public SwitchParameter Custom { get; set; }
 
-        [Parameter(Mandatory = false, ValueFromPipelineByPropertyName = true, ParameterSetName = ParameterSet.RoleDefinitionName, HelpMessage = "If specified, displays the the roles at and below scope.")]
-        [Parameter(Mandatory = false, ValueFromPipelineByPropertyName = true, ParameterSetName = ParameterSet.RoleDefinitionCustom, HelpMessage = "If specified, displays the the roles at and below scope.")]
-        [Obsolete("Get-AzureRmRoleDefinition: The parameter \"AtScopeAndBelow\" is being removed in an upcoming breaking change release.")]
-        public SwitchParameter AtScopeAndBelow { get; set; }
-
         public override void ExecuteCmdlet()
         {
             FilterRoleDefinitionOptions options = new FilterRoleDefinitionOptions
             {
                 CustomOnly = Custom.IsPresent ? true : false,
-                #pragma warning disable 0618
-                ScopeAndBelow = AtScopeAndBelow.IsPresent ? true : false,
-                #pragma warning restore 0618
                 Scope = Scope,
                 ResourceIdentifier = new ResourceIdentifier
                 {
-                    Subscription = DefaultProfile.DefaultContext.Subscription.Id.ToString()
+                    Subscription = DefaultProfile.DefaultContext.Subscription.Id?.ToString()
                 },
                 RoleDefinitionId = Id,
                 RoleDefinitionName = Name,
             };
 
+            if (options.Scope == null && options.ResourceIdentifier.Subscription == null)
+            {
+                WriteTerminatingError("No subscription was found in the default profile and no scope was specified. Either specify a scope or use a tenant with a subscription to run the command.");
+            }
+
             AuthorizationClient.ValidateScope(options.Scope, true);
 
             WriteObject(PoliciesClient.FilterRoleDefinitions(options), enumerateCollection: true);
+        }
+
+        private void WriteTerminatingError(string message, params object[] args)
+        {
+            ThrowTerminatingError(new ErrorRecord(new Exception(String.Format(message, args)), "Error", ErrorCategory.NotSpecified, null));
         }
     }
 }

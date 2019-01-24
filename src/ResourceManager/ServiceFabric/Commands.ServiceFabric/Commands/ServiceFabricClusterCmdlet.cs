@@ -21,12 +21,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Commands.ServiceFabric.Common;
 using Microsoft.Azure.Commands.ServiceFabric.Models;
-using Microsoft.Azure.Management.Compute;
-using Microsoft.Azure.Management.Compute.Models;
 using Microsoft.Azure.Management.ServiceFabric;
 using Microsoft.Azure.Management.ServiceFabric.Models;
 using Newtonsoft.Json.Linq;
 using ServiceFabricProperties = Microsoft.Azure.Commands.ServiceFabric.Properties;
+using Microsoft.Azure.Commands.Common.Compute.Version_2018_04.Models;
+using Microsoft.Azure.Commands.Common.Compute.Version_2018_04;
 
 namespace Microsoft.Azure.Commands.ServiceFabric.Commands
 {
@@ -93,18 +93,7 @@ namespace Microsoft.Azure.Commands.ServiceFabric.Commands
             catch (Exception e)
             {
                 PrintSdkExceptionDetail(e);
-
-                if (e.InnerException != null)
-                {
-                    while (e.InnerException != null)
-                    {
-                        e = e.InnerException;
-                    }
-
-                    throw;
-                }
-
-                throw;
+                throw GetInnerException(e);
             }
 
             return new PSCluster(cluster);
@@ -163,18 +152,7 @@ namespace Microsoft.Azure.Commands.ServiceFabric.Commands
             catch (Exception e)
             {
                 PrintSdkExceptionDetail(e);
-
-                if (e.InnerException != null)
-                {
-                    while (e.InnerException != null)
-                    {
-                        e = e.InnerException;
-                    }
-
-                    throw;
-                }
-
-                throw;
+                throw GetInnerException(e);
             }
 
             return new PSCluster(cluster);
@@ -193,17 +171,7 @@ namespace Microsoft.Azure.Commands.ServiceFabric.Commands
             }
             catch (Exception e)
             {
-                if (e.InnerException != null)
-                {
-                    while (e.InnerException != null)
-                    {
-                        e = e.InnerException;
-                    }
-
-                    throw;
-                }
-
-                throw;
+                throw GetInnerException(e);
             }
         }
 
@@ -348,6 +316,16 @@ namespace Microsoft.Azure.Commands.ServiceFabric.Commands
 
             exceptions.ForEach(PrintSdkExceptionDetail);
             task.Wait();
+        }
+
+        protected Exception GetInnerException(Exception exception)
+        {
+            while (exception.InnerException != null)
+            {
+                exception = exception.InnerException;
+            }
+
+            return exception;
         }
     }
 }

@@ -14,6 +14,10 @@
 
 using Microsoft.Azure.Commands.Common.Authentication;
 using Microsoft.Azure.Commands.Common.Authentication.Abstractions;
+// TODO: Remove IfDef
+#if NETSTANDARD
+using Microsoft.Azure.Commands.Common.Authentication.Abstractions.Core;
+#endif
 using Microsoft.WindowsAzure.Commands.Common.Test.Mocks;
 using Microsoft.WindowsAzure.Commands.ScenarioTest;
 using Microsoft.WindowsAzure.Commands.Storage;
@@ -92,7 +96,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
         public AzureSMProfileProvider smProvider = AzureSMProfileProvider.Instance;
         public AzureRmProfileProvider rmProvider = AzureRmProfileProvider.Instance;
 
-        public void InitSession()
+        private void InitSession()
         {
             AzureSessionInitializer.InitializeAzureSession();
             smProvider = AzureSMProfileProvider.Instance;
@@ -102,7 +106,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
 
         }
 
-        public void SetSM_RMProfile(bool isSMProfileNull = false, bool isRMProfileNull = false)
+        private void SetSM_RMProfile(bool isSMProfileNull = false, bool isRMProfileNull = false)
         {
             if (isSMProfileNull)
             {
@@ -122,7 +126,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
             }
         }
 
-        public void CleanupSession()
+        private void CleanupSession()
         {
             AzureSMProfileProvider.SetInstance(() => smProvider, true);
             AzureRmProfileProvider.SetInstance(() => rmProvider, true);
@@ -190,6 +194,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
             }
         }
 
+#if !NETSTANDARD
         [Fact]
         [Trait(Category.AcceptanceType, Category.CheckIn)]
         public void CanCreateStorageContextNameAndKey_SmNotNull_RmNull()
@@ -220,6 +225,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
                 CleanupSession();
             }
         }
+#endif
 
         [Fact]
         [Trait(Category.AcceptanceType, Category.CheckIn)]
@@ -277,7 +283,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
                 var storageContext = output.First() as AzureStorageContext;
                 Assert.NotNull(storageContext);
                 Assert.Equal(cmdlet.StorageAccountName, storageContext.StorageAccountName);
-                Assert.True(storageContext.BlobEndPoint.Contains(".cn"));
+                Assert.Contains(".cn", storageContext.BlobEndPoint);
             }
             finally
             {
@@ -285,6 +291,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
             }
         }
 
+#if !NETSTANDARD
         [Fact]
         [Trait(Category.AcceptanceType, Category.CheckIn)]
         public void CanCreateStorageContextInChinaCloud_SmNotNull_RmNull()
@@ -317,6 +324,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
                 CleanupSession();
             }
         }
+#endif
 
         [Fact]
         [Trait(Category.AcceptanceType, Category.CheckIn)]
@@ -343,7 +351,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
                 var storageContext = output.First() as AzureStorageContext;
                 Assert.NotNull(storageContext);
                 Assert.Equal(cmdlet.StorageAccountName, storageContext.StorageAccountName);
-                Assert.True(storageContext.BlobEndPoint.Contains(".cn"));
+                Assert.Contains(".cn", storageContext.BlobEndPoint);
             }
             finally
             {
@@ -416,7 +424,8 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
                 CleanupSession();
             }
         }
-        
+
+#if !NETSTANDARD
         [Fact]
         [Trait(Category.AcceptanceType, Category.CheckIn)]
         public void CanCreateStorageContextSASToken_SmNotNull_RmNull()
@@ -449,6 +458,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
                 CleanupSession();
             }
         }
+#endif
 
         [Fact]
         [Trait(Category.AcceptanceType, Category.CheckIn)]
@@ -549,6 +559,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
             }
         }
 
+#if !NETSTANDARD
         [Fact]
         [Trait(Category.AcceptanceType, Category.CheckIn)]
         public void CanCreateStorageContextAnonymous_SmNotNull_RmNull()
@@ -581,6 +592,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
                 CleanupSession();
             }
         }
+#endif
 
         [Fact]
         [Trait(Category.AcceptanceType, Category.CheckIn)]
@@ -642,7 +654,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
                 var storageContext = output.First() as AzureStorageContext;
                 Assert.NotNull(storageContext);
                 Assert.Equal(cmdlet.StorageAccountName, storageContext.StorageAccountName);
-                Assert.True(storageContext.BlobEndPoint.Contains("core.chinacloudapi.cn"));
+                Assert.Contains("core.chinacloudapi.cn", storageContext.BlobEndPoint);
             }
             finally
             {
@@ -677,7 +689,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
                 var storageContext = output.First() as AzureStorageContext;
                 Assert.NotNull(storageContext);
                 Assert.Equal(cmdlet.StorageAccountName, storageContext.StorageAccountName);
-                Assert.True(storageContext.BlobEndPoint.Contains("core.chinacloudapi.cn"));
+                Assert.Contains("core.chinacloudapi.cn", storageContext.BlobEndPoint);
             }
             finally
             {
@@ -685,6 +697,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
             }
         }
 
+#if !NETSTANDARD
         [Fact]
         [Trait(Category.AcceptanceType, Category.CheckIn)]
         public void CanCreateStorageContextEndPoint_SmNotNull_RmNull()
@@ -719,6 +732,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
                 CleanupSession();
             }
         }
+#endif
 
         [Fact]
         [Trait(Category.AcceptanceType, Category.CheckIn)]
@@ -747,7 +761,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
                 var storageContext = output.First() as AzureStorageContext;
                 Assert.NotNull(storageContext);
                 Assert.Equal(cmdlet.StorageAccountName, storageContext.StorageAccountName);
-                Assert.True(storageContext.BlobEndPoint.Contains("core.chinacloudapi.cn"));
+                Assert.Contains("core.chinacloudapi.cn", storageContext.BlobEndPoint);
             }
             finally
             {
@@ -819,6 +833,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
             }
         }
 
+#if !NETSTANDARD
         [Fact]
         [Trait(Category.AcceptanceType, Category.CheckIn)]
         public void CanCreateStorageContextConnectionString_SmNotNull_RmNull()
@@ -850,6 +865,7 @@ namespace Microsoft.WindowsAzure.Management.Storage.Test.Common.Cmdlet
                 CleanupSession();
             }
         }
+#endif
 
         [Fact]
         [Trait(Category.AcceptanceType, Category.CheckIn)]

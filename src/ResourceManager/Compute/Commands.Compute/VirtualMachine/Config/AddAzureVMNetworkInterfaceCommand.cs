@@ -16,6 +16,7 @@ using Microsoft.Azure.Commands.Compute.Common;
 using Microsoft.Azure.Commands.Compute.Models;
 using Microsoft.Azure.Management.Compute.Models;
 using Microsoft.Azure.Management.Internal.Network.Common;
+using Microsoft.WindowsAzure.Commands.Common.CustomAttributes;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
@@ -25,12 +26,10 @@ namespace Microsoft.Azure.Commands.Compute
     /// <summary>
     /// Setup the network interface.
     /// </summary>
-    [Cmdlet(
-        VerbsCommon.Add,
-        ProfileNouns.NetworkInterface,
-        DefaultParameterSetName = NicIdParamSetName),
-    OutputType(
-        typeof(PSVirtualMachine))]
+#if NETSTANDARD
+    [CmdletOutputBreakingChange(typeof(PSVirtualMachineIdentity), DeprecatedOutputProperties = new string[] { "IdentityIds" })]
+#endif
+    [Cmdlet("Add", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "VMNetworkInterface",DefaultParameterSetName = NicIdParamSetName),OutputType(typeof(PSVirtualMachine))]
     public class AddAzureVMNetworkInterfaceCommand : Microsoft.Azure.Commands.ResourceManager.Common.AzureRMCmdlet
     {
         protected const string NicIdParamSetName = "GetNicFromNicId";
@@ -82,9 +81,6 @@ namespace Microsoft.Azure.Commands.Compute
 
         public override void ExecuteCmdlet()
         {
-            WriteWarning("Add-AzureRmVMNetworkInterface: A property of the output of this cmdlet will change in an upcoming breaking change release. " +
-                         "The StorageAccountType property for a DataDisk will return Standard_LRS and Premium_LRS");
-
             var networkProfile = this.VM.NetworkProfile;
 
             if (networkProfile == null)

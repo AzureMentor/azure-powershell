@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: Microsoft.Azure.Commands.Network.dll-Help.xml
 Module Name: AzureRM.Network
 ms.assetid: 9CBF592E-734B-4A0C-A45D-358C226D08C7
@@ -20,7 +20,6 @@ Get-AzureRmVirtualNetworkGateway [-Name <String>] -ResourceGroupName <String>
 
 ## DESCRIPTION
 The Virtual Network Gateway is the object representing your gateway in Azure.
-
 The **Get-AzureRmVirtualNetworkGateway** cmdlet returns the object of your gateway in Azure based on Name and Resource Group Name.
 
 ## EXAMPLES
@@ -38,7 +37,7 @@ Returns the object of the Virtual Network Gateway with the name "myGateway" with
 The credentials, account, tenant, and subscription used for communication with azure.
 
 ```yaml
-Type: IAzureContextContainer
+Type: Microsoft.Azure.Commands.Common.Authentication.Abstractions.IAzureContextContainer
 Parameter Sets: (All)
 Aliases: AzureRmContext, AzureCredential
 
@@ -51,7 +50,7 @@ Accept wildcard characters: False
 
 ### -Name
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
 Aliases: ResourceName
 
@@ -64,9 +63,9 @@ Accept wildcard characters: False
 
 ### -ResourceGroupName
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
-Aliases: 
+Aliases:
 
 Required: True
 Position: Named
@@ -80,8 +79,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
-This cmdlet does not accept any input.
+### System.String
 
 ## OUTPUTS
 
@@ -90,4 +88,3 @@ This cmdlet does not accept any input.
 ## NOTES
 
 ## RELATED LINKS
-

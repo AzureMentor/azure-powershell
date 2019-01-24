@@ -24,6 +24,11 @@ namespace Microsoft.Azure.Commands.Network
 
         private NetworkClient _networkClient;
 
+        public const string IPv4 = "IPv4";
+        public const string IPv6 = "IPv6";
+        public const string All = "All";
+        public const string DisabledRuleGroupsAlias = "DisabledRuleGroups";
+
         public NetworkClient NetworkClient
         {
             get

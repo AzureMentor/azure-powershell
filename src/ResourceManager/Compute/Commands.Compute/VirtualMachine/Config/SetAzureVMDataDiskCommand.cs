@@ -16,6 +16,7 @@ using Microsoft.Azure.Commands.Compute.Common;
 using Microsoft.Azure.Commands.Compute.Models;
 using Microsoft.Azure.Commands.ResourceManager.Common.ArgumentCompleters;
 using Microsoft.Azure.Management.Compute.Models;
+using Microsoft.WindowsAzure.Commands.Common.CustomAttributes;
 using System;
 using System.Globalization;
 using System.Linq;
@@ -23,11 +24,10 @@ using System.Management.Automation;
 
 namespace Microsoft.Azure.Commands.Compute
 {
-    [Cmdlet(
-        VerbsCommon.Set,
-        ProfileNouns.DataDisk),
-    OutputType(
-        typeof(PSVirtualMachine))]
+#if NETSTANDARD
+    [CmdletOutputBreakingChange(typeof(PSVirtualMachineIdentity), DeprecatedOutputProperties = new string[] { "IdentityIds" })]
+#endif
+    [Cmdlet("Set", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "VMDataDisk"),OutputType(typeof(PSVirtualMachine))]
     public class SetAzureVMDataDiskCommand : Microsoft.Azure.Commands.ResourceManager.Common.AzureRMCmdlet
     {
         private const string NameParameterSet = "ChangeWithName";
@@ -81,7 +81,7 @@ namespace Microsoft.Azure.Commands.Compute
             ValueFromPipelineByPropertyName = true,
             HelpMessage = HelpMessages.VMManagedDiskAccountType)]
         [ValidateNotNullOrEmpty]
-        [PSArgumentCompleter("Standard_LRS", "Premium_LRS")]
+        [PSArgumentCompleter("Standard_LRS", "Premium_LRS", "StandardSSD_LRS", "UltraSSD_LRS")]
         public string StorageAccountType { get; set; }
 
         [Parameter(
@@ -91,9 +91,6 @@ namespace Microsoft.Azure.Commands.Compute
 
         public override void ExecuteCmdlet()
         {
-            WriteWarning("Set-AzureRmVMDataDisk: A property of the output of this cmdlet will change in an upcoming breaking change release. " +
-                         "The StorageAccountType property for a DataDisk will return Standard_LRS and Premium_LRS");
-
             var storageProfile = this.VM.StorageProfile;
 
             if (storageProfile == null || storageProfile.DataDisks == null)
@@ -121,8 +118,6 @@ namespace Microsoft.Azure.Commands.Compute
                 }
                 if (this.StorageAccountType != null)
                 {
-                    WriteWarning("Set-AzureRmVMDataDisk: The accepted values for parameter StorageAccountType will change in an upcoming breaking change release " +
-                                 "from StandardLRS and PremiumLRS to Standard_LRS and Premium_LRS, respectively.");
                     if (dataDisk.ManagedDisk == null)
                     {
                         ThrowTerminatingError

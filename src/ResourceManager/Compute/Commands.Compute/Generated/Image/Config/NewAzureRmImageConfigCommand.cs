@@ -20,6 +20,7 @@
 // code is regenerated.
 
 using Microsoft.Azure.Commands.Compute.Automation.Models;
+using Microsoft.Azure.Commands.ResourceManager.Common.ArgumentCompleters;
 using Microsoft.Azure.Management.Compute.Models;
 using System;
 using System.Collections;
@@ -29,7 +30,7 @@ using System.Management.Automation;
 
 namespace Microsoft.Azure.Commands.Compute.Automation
 {
-    [Cmdlet("New", "AzureRmImageConfig", SupportsShouldProcess = true)]
+    [Cmdlet(VerbsCommon.New, ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "ImageConfig", SupportsShouldProcess = true)]
     [OutputType(typeof(PSImage))]
     public partial class NewAzureRmImageConfigCommand : Microsoft.Azure.Commands.ResourceManager.Common.AzureRMCmdlet
     {
@@ -37,7 +38,7 @@ namespace Microsoft.Azure.Commands.Compute.Automation
             Mandatory = false,
             Position = 0,
             ValueFromPipelineByPropertyName = true)]
-        [ResourceManager.Common.ArgumentCompleters.LocationCompleter("Microsoft.Compute/images")]
+        [LocationCompleter("Microsoft.Compute/images")]
         public string Location { get; set; }
 
         [Parameter(
@@ -77,20 +78,17 @@ namespace Microsoft.Azure.Commands.Compute.Automation
 
         private void Run()
         {
-            WriteWarning("New-AzureRmImageConfig: A property of the output of this cmdlet will change in an upcoming breaking change release. " +
-                         "The StorageAccountType property for a DataDisk will return Standard_LRS and Premium_LRS");
-
             // SourceVirtualMachine
-            Microsoft.Azure.Management.Compute.Models.SubResource vSourceVirtualMachine = null;
+            SubResource vSourceVirtualMachine = null;
 
             // StorageProfile
-            Microsoft.Azure.Management.Compute.Models.ImageStorageProfile vStorageProfile = null;
+            ImageStorageProfile vStorageProfile = null;
 
             if (this.MyInvocation.BoundParameters.ContainsKey("SourceVirtualMachineId"))
             {
                 if (vSourceVirtualMachine == null)
                 {
-                    vSourceVirtualMachine = new Microsoft.Azure.Management.Compute.Models.SubResource();
+                    vSourceVirtualMachine = new SubResource();
                 }
                 vSourceVirtualMachine.Id = this.SourceVirtualMachineId;
             }
@@ -99,7 +97,7 @@ namespace Microsoft.Azure.Commands.Compute.Automation
             {
                 if (vStorageProfile == null)
                 {
-                    vStorageProfile = new Microsoft.Azure.Management.Compute.Models.ImageStorageProfile();
+                    vStorageProfile = new ImageStorageProfile();
                 }
                 vStorageProfile.OsDisk = this.OsDisk;
             }
@@ -108,14 +106,14 @@ namespace Microsoft.Azure.Commands.Compute.Automation
             {
                 if (vStorageProfile == null)
                 {
-                    vStorageProfile = new Microsoft.Azure.Management.Compute.Models.ImageStorageProfile();
+                    vStorageProfile = new ImageStorageProfile();
                 }
                 vStorageProfile.DataDisks = this.DataDisk;
             }
 
             if (vStorageProfile == null)
             {
-                vStorageProfile = new Microsoft.Azure.Management.Compute.Models.ImageStorageProfile();
+                vStorageProfile = new ImageStorageProfile();
             }
             vStorageProfile.ZoneResilient = this.ZoneResilient.IsPresent;
 
@@ -131,4 +129,3 @@ namespace Microsoft.Azure.Commands.Compute.Automation
         }
     }
 }
-

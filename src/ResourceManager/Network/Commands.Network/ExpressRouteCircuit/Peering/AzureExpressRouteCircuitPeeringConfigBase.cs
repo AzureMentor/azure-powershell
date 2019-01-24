@@ -24,8 +24,8 @@ namespace Microsoft.Azure.Commands.Network
 
     public class AzureExpressRouteCircuitPeeringConfigBase : NetworkBaseCmdlet
     {
-        public const string IPv4 = "IPv4";
-        public const string IPv6 = "IPv6";
+        protected const string ParamSetByRouteFilterId = "MicrosoftPeeringConfigRoutFilterId";
+        protected const string ParamSetByRouteFilter = "MicrosoftPeeringConfigRoutFilter";
 
         [Parameter(
             Mandatory = false,
@@ -38,9 +38,9 @@ namespace Microsoft.Azure.Commands.Network
             HelpMessage = "The PeeringType")]
         [ValidateNotNullOrEmpty]
         [ValidateSet(
-           MNM.ExpressRouteCircuitPeeringType.AzurePrivatePeering,
-           MNM.ExpressRouteCircuitPeeringType.AzurePublicPeering,
-           MNM.ExpressRouteCircuitPeeringType.MicrosoftPeering,
+           MNM.ExpressRoutePeeringType.AzurePrivatePeering,
+           MNM.ExpressRoutePeeringType.AzurePublicPeering,
+           MNM.ExpressRoutePeeringType.MicrosoftPeering,
            IgnoreCase = true)]
         public string PeeringType { get; set; }
 
@@ -95,7 +95,7 @@ namespace Microsoft.Azure.Commands.Network
         [Parameter(
             Mandatory = true,
             ValueFromPipelineByPropertyName = true,
-            ParameterSetName = "MicrosoftPeeringConfigRoutFilterId",
+            ParameterSetName = ParamSetByRouteFilterId,
             HelpMessage = "RouteFilterId")]
         [ValidateNotNullOrEmpty]
         public string RouteFilterId { get; set; }
@@ -103,7 +103,7 @@ namespace Microsoft.Azure.Commands.Network
         [Parameter(
             Mandatory = true,
             ValueFromPipelineByPropertyName = true,
-            ParameterSetName = "MicrosoftPeeringConfigRoutFilter",
+            ParameterSetName = ParamSetByRouteFilter,
             HelpMessage = "RouteFilter")]
         [ValidateNotNullOrEmpty]
         public PSRouteFilter RouteFilter { get; set; }

@@ -13,16 +13,15 @@
 // ----------------------------------------------------------------------------------
 
 using Microsoft.Azure.Commands.KeyVault.Models;
+using Microsoft.Azure.Commands.ResourceManager.Common.ArgumentCompleters;
 using System;
 using System.Collections;
 using System.Management.Automation;
 
 namespace Microsoft.Azure.Commands.KeyVault
 {
-    [Cmdlet( VerbsCommon.Add, CmdletNoun.AzureKeyVaultManagedStorageAccount,
-        SupportsShouldProcess = true,
-        HelpUri = Constants.KeyVaultHelpUri)]
-    [OutputType(typeof(ManagedStorageAccount))]
+    [Cmdlet("Add", ResourceManager.Common.AzureRMConstants.AzurePrefix + "KeyVaultManagedStorageAccount",SupportsShouldProcess = true)]
+    [OutputType(typeof(PSKeyVaultManagedStorageAccount))]
     public class AddAzureKeyVaultManagedStorageAccount : KeyVaultCmdletBase
     {
         #region Input Parameter Definitions
@@ -30,6 +29,7 @@ namespace Microsoft.Azure.Commands.KeyVault
             Position = 0,
             ValueFromPipelineByPropertyName = true,
             HelpMessage = "Vault name. Cmdlet constructs the FQDN of a vault based on the name and currently selected environment.")]
+        [ResourceNameCompleter("Microsoft.KeyVault/vaults", "FakeResourceGroupName")]
         [ValidateNotNullOrEmpty]
         public string VaultName { get; set; }
 
@@ -91,7 +91,7 @@ namespace Microsoft.Azure.Commands.KeyVault
                     ActiveKeyName,
                     !DisableAutoRegenerateKey.IsPresent,
                     RegenerationPeriod,
-                    new ManagedStorageAccountAttributes( !Disable.IsPresent ),
+                    new PSKeyVaultManagedStorageAccountAttributes( !Disable.IsPresent ),
                     Tag );
 
                 WriteObject( managedStorageAccount );

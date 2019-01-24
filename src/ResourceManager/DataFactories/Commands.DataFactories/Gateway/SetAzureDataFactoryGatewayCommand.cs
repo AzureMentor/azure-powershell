@@ -20,7 +20,7 @@ using System.Security.Permissions;
 
 namespace Microsoft.Azure.Commands.DataFactories
 {
-    [Cmdlet(VerbsCommon.Set, Constants.Gateway, DefaultParameterSetName = ByFactoryName), OutputType(typeof(PSDataFactoryGateway))]
+    [Cmdlet("Set", ResourceManager.Common.AzureRMConstants.AzureRMPrefix + "DataFactoryGateway", DefaultParameterSetName = ByFactoryName), OutputType(typeof(PSDataFactoryGateway))]
     public class SetAzureDataFactoryGatewayCommand : DataFactoryBaseCmdlet
     {
         [Parameter(ParameterSetName = ByFactoryObject, Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true,
@@ -41,7 +41,6 @@ HelpMessage = "The data factory object.")]
         [ValidateNotNullOrEmpty]
         public string Description { get; set; }
 
-        [EnvironmentPermission(SecurityAction.Demand, Unrestricted = true)]
         public override void ExecuteCmdlet()
         {
             if (ParameterSetName == ByFactoryObject)

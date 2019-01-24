@@ -128,7 +128,7 @@ function Test-VirtualMachineScaleSet-Common($IsManaged)
                     -ImageReferenceOffer $imgRef.Offer -ImageReferenceSku $imgRef.Skus -ImageReferenceVersion $imgRef.Version `
                     -ImageReferencePublisher $imgRef.PublisherName -OsDiskWriteAccelerator `
                     | Add-AzureRmVmssDataDisk -Name 'testDataDisk1' -Caching 'ReadOnly' -DiskSizeGB  20 -Lun 1 -CreateOption Empty `
-                    -StorageAccountType StandardLRS -WriteAccelerator;
+                    -StorageAccountType Standard_LRS -WriteAccelerator;
 
             Assert-AreEqual 'FromImage' $vmss.VirtualMachineProfile.StorageProfile.OsDisk.CreateOption;
             Assert-AreEqual 'None' $vmss.VirtualMachineProfile.StorageProfile.OsDisk.Caching;
@@ -145,7 +145,7 @@ function Test-VirtualMachineScaleSet-Common($IsManaged)
             Assert-AreEqual 20 $vmss.VirtualMachineProfile.StorageProfile.DataDisks[0].DiskSizeGB;
             Assert-AreEqual 1 $vmss.VirtualMachineProfile.StorageProfile.DataDisks[0].Lun;
             Assert-AreEqual 'Empty' $vmss.VirtualMachineProfile.StorageProfile.DataDisks[0].CreateOption;
-            Assert-AreEqual "StandardLRS" $vmss.VirtualMachineProfile.StorageProfile.DataDisks[0].ManagedDisk.StorageAccountType;
+            Assert-AreEqual "Standard_LRS" $vmss.VirtualMachineProfile.StorageProfile.DataDisks[0].ManagedDisk.StorageAccountType;
             Assert-AreEqual $true $vmss.VirtualMachineProfile.StorageProfile.DataDisks[0].WriteAcceleratorEnabled;
             $vmss.VirtualMachineProfile.StorageProfile.DataDisks[0].WriteAcceleratorEnabled = $false;
 
@@ -264,18 +264,24 @@ function Test-VirtualMachineScaleSet-Common($IsManaged)
         }
 
         $st = $vmssResult | Stop-AzureRmVmss -StayProvision -Force;
+        Verify-PSOperationStatusResponse $st;
+
         $job = $vmssResult | Stop-AzureRmVmss -Force -AsJob;
         $result = $job | Wait-Job;
         Assert-AreEqual "Completed" $result.State;
-        $st = $job | Receive-Job
+        $st = $job | Receive-Job;
+        Verify-PSOperationStatusResponse $st;
+
         $job = $vmssResult | Start-AzureRmVmss -AsJob;
         $result = $job | Wait-Job;
         Assert-AreEqual "Completed" $result.State;
-        $st = $job | Receive-Job
+        $st = $job | Receive-Job;
+
         $job = $vmssResult | Restart-AzureRmVmss -AsJob;
         $result = $job | Wait-Job;
         Assert-AreEqual "Completed" $result.State;
-        $st = $job | Receive-Job
+        $st = $job | Receive-Job;
+        Verify-PSOperationStatusResponse $st;
 
         if ($IsManaged -eq $true)
         {
@@ -283,6 +289,8 @@ function Test-VirtualMachineScaleSet-Common($IsManaged)
             $job | Wait-Job;
             $result = $job | Wait-Job;
             Assert-AreEqual "Completed" $result.State;
+            $st = $job | Receive-Job;
+            Verify-PSOperationStatusResponse $st;
         }
         $instanceListParam = @();
         for ($i = 0; $i -lt 2; $i++)
@@ -291,9 +299,17 @@ function Test-VirtualMachineScaleSet-Common($IsManaged)
         }
 
         $st = $vmssResult | Stop-AzureRmVmss -StayProvision -InstanceId $instanceListParam -Force;
+        Verify-PSOperationStatusResponse $st;
+
         $st = $vmssResult | Stop-AzureRmVmss -InstanceId $instanceListParam -Force;
+        Verify-PSOperationStatusResponse $st;
+
         $st = $vmssResult | Start-AzureRmVmss -InstanceId $instanceListParam;
+        Verify-PSOperationStatusResponse $st;
+
         $st = $vmssResult | Restart-AzureRmVmss -InstanceId $instanceListParam;
+        Verify-PSOperationStatusResponse $st;
+
         if ($IsManaged -eq $true)
         {
             for ($j = 0; $j -lt 2; $j++)
@@ -301,15 +317,14 @@ function Test-VirtualMachineScaleSet-Common($IsManaged)
                 $job = Set-AzureRmVmssVM -ReimageAll -ResourceGroupName $rgname  -VMScaleSetName $vmssName -InstanceId $j -AsJob;
                 $result = $job | Wait-Job;
                 Assert-AreEqual "Completed" $result.State;
-                $st = $job | Receive-Job
+                $st = $job | Receive-Job;
+                Verify-PSOperationStatusResponse $st;
             }
         }
 
         # Remove
         $st = Remove-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName -InstanceId 1 -Force;
-        $job = $vmssResult | Remove-AzureRmVmss -Force -AsJob;
-        $result = $job | Wait-Job;
-        Assert-AreEqual "Completed" $result.State;
+        Verify-PSOperationStatusResponse $st;
     }
     finally
     {
@@ -996,6 +1011,7 @@ function Test-VirtualMachineScaleSetIdentity
         Assert-AreEqual "SystemAssigned" $result.Identity.Type;
         Assert-NotNull $result.Identity.PrincipalId;
         Assert-NotNull $result.Identity.TenantId;
+        Assert-Null $result.Identity.UserAssignedIdentities;
 
         # Validate Network Profile
         Assert-AreEqual 'test' $result.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Name;
@@ -1031,10 +1047,20 @@ function Test-VirtualMachineScaleSetIdentity
         Assert-AreEqual "SystemAssigned" $vmssResult.Identity.Type;
         Assert-NotNull $vmssResult.Identity.PrincipalId;
         Assert-NotNull $vmssResult.Identity.TenantId;
+        Assert-Null $vmssResult.Identity.UserAssignedIdentities;
 
         $vmssInstanceViewResult = Get-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName -InstanceView;
         Assert-AreEqual "ProvisioningState/succeeded" $vmssInstanceViewResult.VirtualMachine.StatusesSummary[0].Code;
         $output = $vmssInstanceViewResult | Out-String
+
+        Update-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName -VirtualMachineScaleSet $vmssResult;
+        $vmssResult = Get-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+
+        # Validate VMSS Identity
+        Assert-AreEqual "SystemAssigned" $vmssResult.Identity.Type;
+        Assert-NotNull $vmssResult.Identity.PrincipalId;
+        Assert-NotNull $vmssResult.Identity.TenantId;
+        Assert-Null $vmssResult.Identity.UserAssignedIdentities;
     }
     finally
     {
@@ -1050,16 +1076,26 @@ Test Virtual Machine Scale Set Identity
 function Test-VirtualMachineScaleSetUserIdentity
 {
     # Setup
-    $rgname = Get-ComputeTestResourceName
+    $subid = "24fb23e3-6ba3-41f0-9b6e-e41131d5d61e";
+    $rgname = "UAITG123456";
+    $loc = 'Central US';
+    $identityname = $rgname + 'Identity';
+
+    # To record this test run these commands first:
+    #
+    # New-AzureRmResourceGroup -Name $rgname -Location 'Central US'
+    # New-AzureRmUserAssignedIdentity -ResourceGroupName $rgname -Name $identityname
+    # 
+    # Now get the identity :
+    # 
+    # $newUserIdentity = Get-AzureRmUserAssignedIdentity -ResourceGroupName $rgname -Name $identityname
+    # $newUserId = $newUserIdentity.Id
+    $newUserId = "/subscriptions/${subid}/resourcegroups/${rgname}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/${identityname}";
 
     try
     {
-        # Common
-        $loc = Get-ComputeVMLocation;
-        New-AzureRMResourceGroup -Name $rgname -Location $loc -Force;
-
         # SRP
-        $stoname = 'sto' + $rgname;
+        $stoname = 'sto' + $rgname.ToLowerInvariant();
         $stotype = 'Standard_GRS';
         New-AzureRMStorageAccount -ResourceGroupName $rgname -Name $stoname -Location $loc -Type $stotype;
         $stoaccount = Get-AzureRMStorageAccount -ResourceGroupName $rgname -Name $stoname;
@@ -1072,26 +1108,21 @@ function Test-VirtualMachineScaleSetUserIdentity
 
         # New VMSS Parameters
         $vmssName = 'vmss' + $rgname;
-        $vmssType = 'Microsoft.Compute/virtualMachineScaleSets';
 
         $adminUsername = 'Foo12';
         $adminPassword = $PLACEHOLDER;
 
         $imgRef = Get-DefaultCRPImage -loc $loc;
-        $storageUri = "https://" + $stoname + ".blob.core.windows.net/"
-        $vhdContainer = "https://" + $stoname + ".blob.core.windows.net/" + $vmssName;
+        $vhdContainer = "https://" + $stoname + ".blob.core.windows.net/" + $vmssName.ToLowerInvariant();
 
         $extname = 'csetest';
         $publisher = 'Microsoft.Compute';
         $exttype = 'BGInfo';
         $extver = '2.1';
 
-        # MSI cmdlets are not ready yet.  Use a fake identity to test new paramters.
-        $userIdentity = 'fakeidentity';
-
         $ipCfg = New-AzureRmVmssIPConfig -Name 'test' -SubnetId $subnetId;
         $vmss = New-AzureRmVmssConfig -Location $loc -SkuCapacity 2 -SkuName 'Standard_A0' -UpgradePolicyMode 'Manual' -NetworkInterfaceConfiguration $netCfg `
-            -IdentityType UserAssigned -IdentityId "/subscriptions/24fb23e3-6ba3-41f0-9b6e-e41131d5d61e/resourceGroups/${rgname}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/${userIdentity}" `
+            -IdentityType UserAssigned -IdentityId $newUserId `
             | Add-AzureRmVmssNetworkInterfaceConfiguration -Name 'test' -Primary $true -IPConfiguration $ipCfg `
             | Set-AzureRmVmssOSProfile -ComputerNamePrefix 'test' -AdminUsername $adminUsername -AdminPassword $adminPassword `
             | Set-AzureRmVmssStorageProfile -Name 'test' -OsDiskCreateOption 'FromImage' -OsDiskCaching 'None' `
@@ -1099,8 +1130,16 @@ function Test-VirtualMachineScaleSetUserIdentity
             -ImageReferencePublisher $imgRef.PublisherName -VhdContainer $vhdContainer `
             | Add-AzureRmVmssExtension -Name $extname -Publisher $publisher -Type $exttype -TypeHandlerVersion $extver -AutoUpgradeMinorVersion $true;
 
-        Assert-ThrowsContains { New-AzureRmVmss -ResourceGroupName $rgname -Name $vmssName -VirtualMachineScaleSet $vmss; } `
-             "ManagedServiceIdentityInternalError";
+        New-AzureRmVmss -ResourceGroupName $rgname -Name $vmssName -VirtualMachineScaleSet $vmss;
+        $vmss = Get-AzureRmVmss -ResourceGroupName $rgname -Name $vmssName;
+        
+        Assert-AreEqual $vmssName $vmss.Name;
+        Assert-AreEqual "UserAssigned" $vmss.Identity.Type;
+        Assert-NotNull $vmss.Identity.UserAssignedIdentities;
+        Assert-AreEqual 1 $vmss.Identity.UserAssignedIdentities.Count;
+        Assert-True { $vmss.Identity.UserAssignedIdentities.ContainsKey($newUserId) };
+        Assert-NotNull $vmss.Identity.UserAssignedIdentities[$newUserId].PrincipalId;
+        Assert-NotNull $vmss.Identity.UserAssignedIdentities[$newUserId].ClientId;
     }
     finally
     {
@@ -1343,7 +1382,7 @@ function Test-VirtualMachineScaleSetPriority
         $extname2 = 'csetest2';
 
         $ipCfg = New-AzureRmVmssIPConfig -Name 'test' -SubnetId $subnetId;
-        $vmss = New-AzureRmVmssConfig -Location $loc -SkuCapacity 2 -SkuName 'Standard_A0' -UpgradePolicyMode 'Manual' -NetworkInterfaceConfiguration $netCfg -Priority 'Regular' `
+        $vmss = New-AzureRmVmssConfig -Location $loc -SkuCapacity 2 -SkuName 'Standard_A1' -UpgradePolicyMode 'Manual' -NetworkInterfaceConfiguration $netCfg -Priority 'Low' -EvictionPolicy 'Delete' `
             | Add-AzureRmVmssNetworkInterfaceConfiguration -Name 'test' -Primary $true -IPConfiguration $ipCfg `
             | Set-AzureRmVmssOSProfile -ComputerNamePrefix 'test' -AdminUsername $adminUsername -AdminPassword $adminPassword `
             | Set-AzureRmVmssStorageProfile -Name 'test' -OsDiskCreateOption 'FromImage' -OsDiskCaching 'None' `
@@ -1353,15 +1392,18 @@ function Test-VirtualMachineScaleSetPriority
 
         $result = New-AzureRmVmss -ResourceGroupName $rgname -Name $vmssName -VirtualMachineScaleSet $vmss;
         $vmssResult = Get-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName;
-        Assert-AreEqual "Regular" $vmssResult.VirtualMachineProfile.Priority;
+        Assert-AreEqual "Low" $vmssResult.VirtualMachineProfile.Priority;
+        Assert-AreEqual "Delete" $vmssResult.VirtualMachineProfile.EvictionPolicy;
         $output = $vmssResult | Out-String;
         Assert-True {$output.Contains("Priority")};
+        Assert-True {$output.Contains("EvictionPolicy")};
 
         Update-AzureRmVmss -ResourceGroupName $rgname -Name $vmssName -VirtualMachineScaleSet $vmssResult;
         $vmssResult = Get-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName;
-        Assert-AreEqual "Regular" $vmssResult.VirtualMachineProfile.Priority;
+        Assert-AreEqual "Low" $vmssResult.VirtualMachineProfile.Priority;
+        Assert-AreEqual "Delete" $vmssResult.VirtualMachineProfile.EvictionPolicy;
 
-        $vmssResult.VirtualMachineProfile.Priority = "Low";
+        $vmssResult.VirtualMachineProfile.Priority = "Regular";
         Assert-ThrowsContains { Update-AzureRmVmss -ResourceGroupName $rgname -Name $vmssName -VirtualMachineScaleSet $vmssResult; } `
             "Changing property 'priority' is not allowed";
     }
@@ -1458,6 +1500,517 @@ function Test-VirtualMachineScaleSetWriteAcceleratorUpdate
 
         $vmss2 = $vmss | Update-AzureRmVmss -OsDiskWriteAccelerator $false;
         Assert-AreEqual $false $vmss2.VirtualMachineProfile.StorageProfile.OsDisk.WriteAcceleratorEnabled;
+    }
+    finally
+    {
+        # Cleanup
+        Clean-ResourceGroup $rgname
+    }
+}
+
+<#
+.SYNOPSIS
+Test Virtual Machine Scale Set Force Service Fabric UD Walk
+#>
+function Test-VirtualMachineScaleSetForceUDWalk
+{
+    # Setup
+    $rgname = "vmsssfudtest"
+
+    try
+    {
+        # Common
+        $loc = 'CentralUS';
+        $adminUsername = 'Foo12';
+        $adminPassword = $PLACEHOLDER;
+        New-AzureRMResourceGroup -Name $rgname -Location $loc -Force;
+        $testMode = Get-ComputeTestMode;
+
+        if ($testMode -eq [Microsoft.Azure.Test.HttpRecorder.HttpRecorderMode]::Playback)
+        {
+            $sf_endpoint = "https://${loc}.servicefabric.azure.com/runtime/clusters/828bd729-f938-41de-8fba-24139669e2d2";
+            $sf_nodename = "nt1vm";
+            $sf_durability = "Bronze";
+        }
+        else
+        {
+            ###
+            ### For record test, first run the following commands.
+            ###
+            $password = ConvertTo-SecureString $adminPassword -AsPlainText -Force;
+            New-AzureRmServiceFabricCluster -ResourceGroupName $rgname -Location $loc -VmPassword $password;
+            $sf_cluster = Get-AzureRmServiceFabricCluster -ResourceGroupName $rgname -Name $rgname;
+            $sf_endpoint = $sf_cluster.ClusterEndpoint;
+            $sf_nodename = $sf_cluster.NodeTypes[0].Name;
+            $sf_durability = $sf_cluster.NodeTypes[0].DurabilityLevel;
+        }
+
+        # NRP
+        $subnet = New-AzureRMVirtualNetworkSubnetConfig -Name ('subnet' + $rgname) -AddressPrefix "10.0.0.0/24";
+        $vnet = New-AzureRMVirtualNetwork -Force -Name ('vnet' + $rgname) -ResourceGroupName $rgname -Location $loc -AddressPrefix "10.0.0.0/16" -Subnet $subnet;
+        $vnet = Get-AzureRMVirtualNetwork -Name ('vnet' + $rgname) -ResourceGroupName $rgname;
+        $subnetId = $vnet.Subnets[0].Id;
+
+        # New VMSS Parameters
+        $vmssName = 'vmss' + $rgname;
+        $imgRef = Get-DefaultCRPImage -loc $loc;
+
+        $extname = 'udwalktest';
+        $publisher = 'Microsoft.Azure.ServiceFabric';
+        $exttype = 'ServiceFabricNode';
+        $extver = '1.0';
+        $settings = @{"clusterEndpoint"=${sf_endpoint};"nodeTypeRef"=${sf_nodename};"durabilityLevel"=${sf_durability};"enableParallelJobs"="true";"dataPath"="D:\\\\SvcFab"};
+
+        $ipCfg = New-AzureRmVmssIPConfig -Name 'test' -SubnetId $subnetId;
+        $vmss = New-AzureRmVmssConfig -Location $loc -SkuCapacity 2 -SkuName 'Standard_A0' -UpgradePolicyMode 'Automatic' `
+            | Add-AzureRmVmssNetworkInterfaceConfiguration -Name 'test' -Primary $true -IPConfiguration $ipCfg `
+            | Set-AzureRmVmssOSProfile -ComputerNamePrefix 'test' -AdminUsername $adminUsername -AdminPassword $adminPassword `
+            | Set-AzureRmVmssStorageProfile -OsDiskCreateOption 'FromImage' -OsDiskCaching 'None' `
+            -ImageReferenceOffer $imgRef.Offer -ImageReferenceSku $imgRef.Skus -ImageReferenceVersion $imgRef.Version `
+            -ImageReferencePublisher $imgRef.PublisherName `
+            | Add-AzureRmVmssExtension -Name $extname -Publisher $publisher -Type $exttype -TypeHandlerVersion $extver -Setting $settings -AutoUpgradeMinorVersion $true;
+
+        $result = New-AzureRmVmss -ResourceGroupName $rgname -Name $vmssName -VirtualMachineScaleSet $vmss;
+
+        Assert-AreEqual $LOC $RESULT.LOCATION;
+        Assert-AreEqual 2 $RESULT.SKU.CAPACITY;
+        Assert-AreEqual 'STANDARD_A0' $RESULT.SKU.NAME;
+        Assert-AreEqual 'Automatic' $result.UpgradePolicy.Mode;
+
+        # Validate Network Profile
+        Assert-AreEqual 'test' $result.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Name;
+        Assert-AreEqual $true $result.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Primary;
+        Assert-AreEqual $subnetId `
+           $result.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].IpConfigurations[0].Subnet.Id;
+
+        # Validate OS Profile
+        Assert-AreEqual 'test' $result.VirtualMachineProfile.OsProfile.ComputerNamePrefix;
+        Assert-AreEqual $adminUsername $result.VirtualMachineProfile.OsProfile.AdminUsername;
+        Assert-Null $result.VirtualMachineProfile.OsProfile.AdminPassword;
+
+        # Validate Storage Profile
+        Assert-AreEqual $imgRef.Offer $result.VirtualMachineProfile.StorageProfile.ImageReference.Offer;
+        Assert-AreEqual $imgRef.Skus $result.VirtualMachineProfile.StorageProfile.ImageReference.Sku;
+        Assert-AreEqual $imgRef.Version $result.VirtualMachineProfile.StorageProfile.ImageReference.Version;
+        Assert-AreEqual $imgRef.PublisherName $result.VirtualMachineProfile.StorageProfile.ImageReference.Publisher;
+
+        # Validate Extension Profile
+        Assert-AreEqual $extname $result.VirtualMachineProfile.ExtensionProfile.Extensions[0].Name;
+        Assert-AreEqual $publisher $result.VirtualMachineProfile.ExtensionProfile.Extensions[0].Publisher;
+        Assert-AreEqual $exttype $result.VirtualMachineProfile.ExtensionProfile.Extensions[0].Type;
+        Assert-AreEqual $extver $result.VirtualMachineProfile.ExtensionProfile.Extensions[0].TypeHandlerVersion;
+        Assert-AreEqual $true $result.VirtualMachineProfile.ExtensionProfile.Extensions[0].AutoUpgradeMinorVersion;
+
+        # Verify the result of VMSS
+        $vmss = Get-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        Assert-AreEqual $null $vmss.Zones;
+        Assert-AreEqual 0 $vmss.Tags.Count;
+        Assert-AreEqual 2 $vmss.Sku.Capacity;
+        Assert-AreEqual $false $vmss.VirtualMachineProfile.StorageProfile.OsDisk.WriteAcceleratorEnabled;
+
+        $vmss = Get-AzureRmVmss -ResourceGroupName $rgname -Name $vmssName;
+        $job = Update-AzureRmVmss -ResourceGroupName $rgname -Name $vmssName -VirtualMachineScaleSet $vmss -SkuName 'Standard_A1' -AsJob;
+
+        Wait-Seconds 300;
+        $vmss_view = Get-AzureRmVmss -ResourceGroupName $rgname -Name $vmssName -InstanceView;
+        $output = $vmss_view | Out-String
+
+        $result = Repair-AzureRmVmssServiceFabricUpdateDomain -ResourceGroupName $rgname -VMScaleSetName $vmssName -PlatformUpdateDomain 0;
+        Assert-True {$result.WalkPerformed};
+        Assert-AreEqual 1 $result.NextPlatformUpdateDomain;
+
+        $result = $vmss | Repair-AzureRmVmssServiceFabricUD -PlatformUpdateDomain 1;
+        Assert-True {$result.WalkPerformed};
+        Assert-AreEqual 2 $result.NextPlatformUpdateDomain;
+
+        $result = Repair-AzureRmVmssServiceFabricUD -ResourceId $vmss.Id -PlatformUpdateDomain 2;
+        Assert-True {$result.WalkPerformed};
+    }
+    finally
+    {
+        # Cleanup
+        Clean-ResourceGroup $rgname
+    }
+}
+
+<#
+.SYNOPSIS
+Test Virtual Machine Scale Set Redeploy and PerformMaintenance
+#>
+function Test-VirtualMachineScaleSetRedeploy
+{
+    # Setup
+    $rgname = Get-ComputeTestResourceName
+
+    try
+    {
+        # Common
+        $loc = Get-Location "Microsoft.Compute" "virtualMachines" "East US 2";
+        New-AzureRMResourceGroup -Name $rgname -Location $loc -Force;
+
+        # SRP
+        $stoname = 'sto' + $rgname;
+        $stotype = 'Standard_GRS';
+        New-AzureRMStorageAccount -ResourceGroupName $rgname -Name $stoname -Location $loc -Type $stotype;
+        $stoaccount = Get-AzureRMStorageAccount -ResourceGroupName $rgname -Name $stoname;
+
+        # NRP
+        $subnet = New-AzureRMVirtualNetworkSubnetConfig -Name ('subnet' + $rgname) -AddressPrefix "10.0.0.0/24";
+        $vnet = New-AzureRMVirtualNetwork -Force -Name ('vnet' + $rgname) -ResourceGroupName $rgname -Location $loc -AddressPrefix "10.0.0.0/16" -Subnet $subnet;
+        $vnet = Get-AzureRMVirtualNetwork -Name ('vnet' + $rgname) -ResourceGroupName $rgname;
+        $subnetId = $vnet.Subnets[0].Id;
+
+        # New VMSS Parameters
+        $vmssName = 'vmss' + $rgname;
+        $vmssType = 'Microsoft.Compute/virtualMachineScaleSets';
+
+        $adminUsername = 'Foo12';
+        $adminPassword = $PLACEHOLDER;
+
+        $imgRef = Get-DefaultCRPImage -loc $loc;
+        $vhdContainer = "https://" + $stoname + ".blob.core.windows.net/" + $vmssName;
+
+        $ipCfg = New-AzureRmVmssIPConfig -Name 'test' -SubnetId $subnetId;
+        $vmss = New-AzureRmVmssConfig -Location $loc -SkuCapacity 2 -SkuName 'Standard_A1_v2' -UpgradePolicyMode 'Automatic' `
+            | Add-AzureRmVmssNetworkInterfaceConfiguration -Name 'test' -Primary $true -IPConfiguration $ipCfg `
+            | Set-AzureRmVmssOSProfile -ComputerNamePrefix 'test' -AdminUsername $adminUsername -AdminPassword $adminPassword `
+            | Set-AzureRmVmssStorageProfile -Name 'test' -OsDiskCreateOption 'FromImage' -OsDiskCaching 'None' `
+            -ImageReferenceOffer $imgRef.Offer -ImageReferenceSku $imgRef.Skus -ImageReferenceVersion $imgRef.Version `
+            -ImageReferencePublisher $imgRef.PublisherName -VhdContainer $vhdContainer;
+
+        $result = New-AzureRmVmss -ResourceGroupName $rgname -Name $vmssName -VirtualMachineScaleSet $vmss;
+
+        Assert-AreEqual $loc.ToLowerInvariant().Replace(" ", "") $result.Location;
+        Assert-AreEqual 2 $result.Sku.Capacity;
+        Assert-AreEqual 'Standard_A1_v2' $result.Sku.Name;
+        Assert-AreEqual 'Automatic' $result.UpgradePolicy.Mode;
+
+        # Validate Network Profile
+        Assert-AreEqual 'test' $result.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Name;
+        Assert-AreEqual $true $result.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Primary;
+        Assert-AreEqual $subnetId `
+            $result.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].IpConfigurations[0].Subnet.Id;
+
+        # Validate OS Profile
+        Assert-AreEqual 'test' $result.VirtualMachineProfile.OsProfile.ComputerNamePrefix;
+        Assert-AreEqual $adminUsername $result.VirtualMachineProfile.OsProfile.AdminUsername;
+        Assert-Null $result.VirtualMachineProfile.OsProfile.AdminPassword;
+
+        # Validate Storage Profile
+        Assert-AreEqual 'test' $result.VirtualMachineProfile.StorageProfile.OsDisk.Name;
+        Assert-AreEqual 'FromImage' $result.VirtualMachineProfile.StorageProfile.OsDisk.CreateOption;
+        Assert-AreEqual 'None' $result.VirtualMachineProfile.StorageProfile.OsDisk.Caching;
+        Assert-AreEqual $vhdContainer $result.VirtualMachineProfile.StorageProfile.OsDisk.VhdContainers[0];
+        Assert-AreEqual $imgRef.Offer $result.VirtualMachineProfile.StorageProfile.ImageReference.Offer;
+        Assert-AreEqual $imgRef.Skus $result.VirtualMachineProfile.StorageProfile.ImageReference.Sku;
+        Assert-AreEqual $imgRef.Version $result.VirtualMachineProfile.StorageProfile.ImageReference.Version;
+        Assert-AreEqual $imgRef.PublisherName $result.VirtualMachineProfile.StorageProfile.ImageReference.Publisher;
+
+        $vmss = Get-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        $vmssVMs = Get-AzureRmVmssVM -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        $id = $vmssVMs[0].InstanceId;
+
+        # Redeploy operation
+        Set-AzureRmVmss -Redeploy -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        $vmss = Get-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        Assert-AreEqual "Succeeded" $vmss.ProvisioningState;
+        $vmssVMs = Get-AzureRmVmssVM -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        Assert-AreEqual "Succeeded" $vmssVMs[0].ProvisioningState;
+        Assert-AreEqual "Succeeded" $vmssVMs[1].ProvisioningState;
+
+        Set-AzureRmVmss -Redeploy -ResourceGroupName $rgname -VMScaleSetName $vmssName -InstanceId $id;
+        $vmss = Get-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        Assert-AreEqual "Succeeded" $vmss.ProvisioningState;
+        $vmssVMs = Get-AzureRmVmssVM -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        Assert-AreEqual "Succeeded" $vmssVMs[0].ProvisioningState;
+        Assert-AreEqual "Succeeded" $vmssVMs[1].ProvisioningState;
+
+        Set-AzureRmVmssVM -Redeploy -ResourceGroupName $rgname -VMScaleSetName $vmssName -InstanceId $id;
+        $vmss = Get-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        Assert-AreEqual "Succeeded" $vmss.ProvisioningState;
+        $vmssVMs = Get-AzureRmVmssVM -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        Assert-AreEqual "Succeeded" $vmssVMs[0].ProvisioningState;
+        Assert-AreEqual "Succeeded" $vmssVMs[1].ProvisioningState;
+
+        # PerformMaintenance operation
+        # Note that PerformMaintenace operation can only be performed when VMSS requires a maintenance  
+        # and after the given subscription gets a permission for the operation due to the required maintenance.
+        Assert-ThrowsContains { Set-AzureRmVmss -PerformMaintenance -ResourceGroupName $rgname -VMScaleSetName $vmssName; } `
+            "since the Subscription of this VM is not eligible";
+
+        $vmss = Get-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        $vmssVMs = Get-AzureRmVmssVM -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+
+        Assert-ThrowsContains { Set-AzureRmVmss -PerformMaintenance -ResourceGroupName $rgname -VMScaleSetName $vmssName -InstanceId $id; } `
+            "since the Subscription of this VM is not eligible";
+
+        $vmss = Get-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        $vmssVMs = Get-AzureRmVmssVM -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+
+        Assert-ThrowsContains { Set-AzureRmVmssVM -PerformMaintenance -ResourceGroupName $rgname -VMScaleSetName $vmssName -InstanceId $id; } `
+            "since the Subscription of this VM is not eligible";
+        $vmss = Get-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        $vmssVMs = Get-AzureRmVmssVM -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+    }
+    finally
+    {
+        # Cleanup
+        Clean-ResourceGroup $rgname
+    }
+}
+
+<#
+.SYNOPSIS
+Test Virtual Machine Scale Set VM Update
+#>
+function Test-VirtualMachineScaleSetVMUpdate
+{
+    # Setup
+    $rgname = Get-ComputeTestResourceName
+
+    try
+    {
+        # Common
+        $loc = Get-Location "Microsoft.Compute" "virtualMachines" "East US 2";
+        New-AzureRMResourceGroup -Name $rgname -Location $loc -Force;
+
+        # SRP
+        $stoname = 'sto' + $rgname;
+        $stotype = 'Standard_GRS';
+        New-AzureRMStorageAccount -ResourceGroupName $rgname -Name $stoname -Location $loc -Type $stotype;
+        $stoaccount = Get-AzureRMStorageAccount -ResourceGroupName $rgname -Name $stoname;
+
+        # NRP
+        $subnet = New-AzureRMVirtualNetworkSubnetConfig -Name ('subnet' + $rgname) -AddressPrefix "10.0.0.0/24";
+        $vnet = New-AzureRMVirtualNetwork -Force -Name ('vnet' + $rgname) -ResourceGroupName $rgname -Location $loc -AddressPrefix "10.0.0.0/16" -Subnet $subnet;
+        $vnet = Get-AzureRMVirtualNetwork -Name ('vnet' + $rgname) -ResourceGroupName $rgname;
+        $subnetId = $vnet.Subnets[0].Id;
+
+        # New VMSS Parameters
+        $vmssName = 'vmss' + $rgname;
+        $vmssType = 'Microsoft.Compute/virtualMachineScaleSets';
+
+        $adminUsername = 'Foo12';
+        $adminPassword = Get-PasswordForVM;
+
+        $imgRef = Get-DefaultCRPImage -loc $loc;
+
+        # Create VMSS with managed disk
+        $ipCfg = New-AzureRmVmssIPConfig -Name 'test' -SubnetId $subnetId;
+        $vmss = New-AzureRmVmssConfig -Location $loc -SkuCapacity 2 -SkuName 'Standard_A1_v2' -UpgradePolicyMode 'Automatic' `
+            | Add-AzureRmVmssNetworkInterfaceConfiguration -Name 'test' -Primary $true -IPConfiguration $ipCfg `
+            | Set-AzureRmVmssOSProfile -ComputerNamePrefix 'test' -AdminUsername $adminUsername -AdminPassword $adminPassword `
+            | Set-AzureRmVmssStorageProfile -OsDiskCreateOption 'FromImage' -OsDiskCaching 'None' `
+            -ImageReferenceOffer $imgRef.Offer -ImageReferenceSku $imgRef.Skus -ImageReferenceVersion $imgRef.Version `
+            -ImageReferencePublisher $imgRef.PublisherName;
+
+        $result = New-AzureRmVmss -ResourceGroupName $rgname -Name $vmssName -VirtualMachineScaleSet $vmss;
+
+        Assert-AreEqual $loc.ToLowerInvariant().Replace(" ", "") $result.Location;
+        Assert-AreEqual 2 $result.Sku.Capacity;
+        Assert-AreEqual 'Standard_A1_v2' $result.Sku.Name;
+        Assert-AreEqual 'Automatic' $result.UpgradePolicy.Mode;
+
+        # Validate Network Profile
+        Assert-AreEqual 'test' $result.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Name;
+        Assert-AreEqual $true $result.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Primary;
+        Assert-AreEqual $subnetId `
+           $result.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].IpConfigurations[0].Subnet.Id;
+
+        # Validate OS Profile
+        Assert-AreEqual 'test' $result.VirtualMachineProfile.OsProfile.ComputerNamePrefix;
+        Assert-AreEqual $adminUsername $result.VirtualMachineProfile.OsProfile.AdminUsername;
+        Assert-Null $result.VirtualMachineProfile.OsProfile.AdminPassword;
+
+        # Validate Storage Profile
+        Assert-AreEqual 'FromImage' $result.VirtualMachineProfile.StorageProfile.OsDisk.CreateOption;
+        Assert-AreEqual 'None' $result.VirtualMachineProfile.StorageProfile.OsDisk.Caching;
+        Assert-AreEqual $imgRef.Offer $result.VirtualMachineProfile.StorageProfile.ImageReference.Offer;
+        Assert-AreEqual $imgRef.Skus $result.VirtualMachineProfile.StorageProfile.ImageReference.Sku;
+        Assert-AreEqual $imgRef.Version $result.VirtualMachineProfile.StorageProfile.ImageReference.Version;
+        Assert-AreEqual $imgRef.PublisherName $result.VirtualMachineProfile.StorageProfile.ImageReference.Publisher;
+
+        $vmss = Get-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        $vmssVMs = Get-AzureRmVmssVM -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+
+        # Add a data disk to VMSS VM using VMSS VM object (with piping)
+        $diskname0 = 'datadisk0';
+        New-AzureRmDiskConfig -Location $loc -DiskSizeGB 5 -AccountType Standard_LRS -OsType Windows -CreateOption Empty `
+        | New-AzureRmDisk -ResourceGroupName $rgname -DiskName $diskname0;
+        $disk0 = Get-AzureRmDisk -ResourceGroupName $rgname -DiskName $diskname0;
+
+        $vmssVM = Add-AzureRmVmssVMDataDisk -VirtualMachineScaleSetVM $vmssVMs[0] -Caching 'ReadOnly' -DiskSizeInGB 10 -Lun 1 -CreateOption Attach -StorageAccountType Standard_LRS -ManagedDiskId $disk0.Id;
+        $vmssVM = Add-AzureRmVmssVMDataDisk -VirtualMachineScaleSetVM $vmssVM -Caching 'ReadOnly' -DiskSizeInGB 100 -Lun 0 -CreateOption Attach -StorageAccountType Standard_LRS -ManagedDiskId $disk0.Id;
+        Assert-AreEqual 2 $vmssVM.StorageProfile.DataDisks.Count;
+
+        $vmssVM = Remove-AzureRmVmssVMDataDisk -VirtualMachineScaleSetVM $vmssVM -Lun 1;
+        Assert-AreEqual 1 $vmssVM.StorageProfile.DataDisks.Count;
+
+        $vmssVM = Remove-AzureRmVmssVMDataDisk -VirtualMachineScaleSetVM $vmssVM -Lun 0;
+        Assert-Null $vmssVM.StorageProfile.DataDisks;
+
+        $result = $vmssVMs[0] `
+                  | Add-AzureRmVmssVMDataDisk -Caching 'ReadOnly' -DiskSizeInGB 10 -Lun 1 -CreateOption Attach -StorageAccountType Standard_LRS -ManagedDiskId $disk0.Id `
+                  | Update-AzureRmVmssVM;
+
+        $vmss = Get-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        $vmssVMs = Get-AzureRmVmssVM -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        Assert-AreEqual 1 $vmssVMs[0].StorageProfile.DataDisks[0].Lun;
+        Assert-AreEqual $diskname0 $vmssVMs[0].StorageProfile.DataDisks[0].Name;
+        Assert-AreEqual 10 $vmssVMs[0].StorageProfile.DataDisks[0].DiskSizeGB;
+        Assert-AreEqual "Attach" $vmssVMs[0].StorageProfile.DataDisks[0].CreateOption;
+        Assert-AreEqual "Standard_LRS" $vmssVMs[0].StorageProfile.DataDisks[0].ManagedDisk.StorageAccountType;
+        Assert-AreEqual $disk0.Id $vmssVMs[0].StorageProfile.DataDisks[0].ManagedDisk.Id;
+
+        # Adding a data disk to a VMSS VM using resource group name, VMSS name and instance ID..
+        $instance_id = $vmssVMs[0].InstanceId;
+        $diskname1 = 'datadisk1';
+        New-AzureRmDiskConfig -Location $loc -DiskSizeGB 5 -AccountType Standard_LRS -OsType Windows -CreateOption Empty `
+        | New-AzureRmDisk -ResourceGroupName $rgname -DiskName $diskname1;
+        $disk1 = Get-AzureRmDisk -ResourceGroupName $rgname -DiskName $diskname1;
+
+        $diskname2 = 'datadisk2';
+        New-AzureRmDiskConfig -Location $loc -DiskSizeGB 5 -AccountType Standard_LRS -OsType Windows -CreateOption Empty `
+        | New-AzureRmDisk -ResourceGroupName $rgname -DiskName $diskname2;
+        $disk2 = Get-AzureRmDisk -ResourceGroupName $rgname -DiskName $diskname2;
+
+        Assert-ThrowsContains { New-AzureRmVMDataDisk -Name 'wrongdiskname' -Caching 'ReadOnly' -Lun 2 -CreateOption Attach -StorageAccountType Standard_LRS -ManagedDiskId $disk1.Id; } `
+            "does not match with given managed disk ID";
+
+        $datadisk1 = New-AzureRmVMDataDisk -Caching 'ReadOnly' -Lun 2 -CreateOption Attach -StorageAccountType Standard_LRS -ManagedDiskId $disk1.Id;
+        $datadisk2 = New-AzureRmVMDataDisk -Caching 'ReadOnly' -Lun 3 -CreateOption Attach -StorageAccountType Standard_LRS -ManagedDiskId $disk2.Id;
+        $result = Update-AzureRmVmssVM -ResourceGroupName  $rgname -VMScaleSetName $vmssName -InstanceId $instance_id -DataDisk $datadisk1,$datadisk2 
+
+        $vmss = Get-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        $vmssVMs = Get-AzureRmVmssVM -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+
+        Assert-AreEqual 2 $vmssVMs[0].StorageProfile.DataDisks[1].Lun;
+        Assert-AreEqual $diskname1 $vmssVMs[0].StorageProfile.DataDisks[1].Name;
+        Assert-AreEqual 5 $vmssVMs[0].StorageProfile.DataDisks[1].DiskSizeGB;
+        Assert-AreEqual "Attach" $vmssVMs[0].StorageProfile.DataDisks[1].CreateOption;
+        Assert-AreEqual "Standard_LRS" $vmssVMs[0].StorageProfile.DataDisks[1].ManagedDisk.StorageAccountType;
+        Assert-AreEqual $disk1.Id $vmssVMs[0].StorageProfile.DataDisks[1].ManagedDisk.Id;
+
+        Assert-AreEqual 3 $vmssVMs[0].StorageProfile.DataDisks[2].Lun;
+        Assert-AreEqual $diskname2 $vmssVMs[0].StorageProfile.DataDisks[2].Name;
+        Assert-AreEqual 5 $vmssVMs[0].StorageProfile.DataDisks[2].DiskSizeGB;
+        Assert-AreEqual "Attach" $vmssVMs[0].StorageProfile.DataDisks[2].CreateOption;
+        Assert-AreEqual "Standard_LRS" $vmssVMs[0].StorageProfile.DataDisks[2].ManagedDisk.StorageAccountType;
+        Assert-AreEqual $disk2.Id $vmssVMs[0].StorageProfile.DataDisks[2].ManagedDisk.Id;
+
+        # Adding a data disk to a VMSS VM using resource ID.
+        $resource_id = $vmssVMs[0].Id;
+        $diskname3 = 'datadisk3';
+        $diskconfig = New-AzureRmDiskConfig -Location $loc -DiskSizeGB 5 -AccountType Standard_LRS -OsType Windows -CreateOption Empty;
+        New-AzureRmDisk -ResourceGroupName $rgname -DiskName $diskname3 -Disk $diskconfig
+        $disk3 = Get-AzureRmDisk -ResourceGroupName $rgname -DiskName $diskname3;
+
+        $datadisk3 = New-AzureRmVMDataDisk -Caching 'ReadOnly' -Lun 4 -CreateOption Attach -StorageAccountType Standard_LRS -ManagedDiskId $disk3.Id;
+        $result = Update-AzureRmVmssVM -ResourceId $resource_id -DataDisk $datadisk3
+
+        $vmss = Get-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        $vmssVMs = Get-AzureRmVmssVM -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        Assert-AreEqual 4 $vmssVMs[0].StorageProfile.DataDisks[3].Lun;
+        Assert-AreEqual $diskname3 $vmssVMs[0].StorageProfile.DataDisks[3].Name;
+        Assert-AreEqual 5 $vmssVMs[0].StorageProfile.DataDisks[3].DiskSizeGB;
+        Assert-AreEqual "Attach" $vmssVMs[0].StorageProfile.DataDisks[3].CreateOption;
+        Assert-AreEqual "Standard_LRS" $vmssVMs[0].StorageProfile.DataDisks[3].ManagedDisk.StorageAccountType;
+        Assert-AreEqual $disk3.Id $vmssVMs[0].StorageProfile.DataDisks[3].ManagedDisk.Id;
+    }
+    finally
+    {
+        # Cleanup
+        Clean-ResourceGroup $rgname
+    }
+}
+
+<#
+.SYNOPSIS
+Test Virtual Machine Scale Set Auto Rollback
+#>
+function Test-VirtualMachineScaleSetAutoRollback
+{
+    # Setup
+    $rgname = Get-ComputeTestResourceName
+
+    try
+    {
+        # Common
+        $loc = Get-Location "Microsoft.Compute" "virtualMachines";
+        New-AzureRMResourceGroup -Name $rgname -Location $loc -Force;
+
+        # NRP
+        $subnet = New-AzureRMVirtualNetworkSubnetConfig -Name ('subnet' + $rgname) -AddressPrefix "10.0.0.0/24";
+        $vnet = New-AzureRMVirtualNetwork -Force -Name ('vnet' + $rgname) -ResourceGroupName $rgname -Location $loc -AddressPrefix "10.0.0.0/16" -Subnet $subnet;
+        $vnet = Get-AzureRMVirtualNetwork -Name ('vnet' + $rgname) -ResourceGroupName $rgname;
+        $subnetId = $vnet.Subnets[0].Id;
+
+        # New VMSS Parameters
+        $vmssName = 'vmss' + $rgname;
+
+        $adminUsername = 'Foo12';
+        $adminPassword = $PLACEHOLDER;
+        $imgRef = Get-DefaultCRPImage -loc $loc;
+
+        $extname = 'csetest';
+        $publisher = 'Microsoft.Compute';
+        $exttype = 'BGInfo';
+        $extver = '2.1';
+
+        $ipCfg = New-AzureRmVmssIPConfig -Name 'test' -SubnetId $subnetId;
+
+        $vmss = New-AzureRmVmssConfig -Location $loc -SkuCapacity 2 -SkuName 'Standard_A0' -UpgradePolicyMode 'Automatic' -DisableAutoRollback $false `
+            | Add-AzureRmVmssNetworkInterfaceConfiguration -Name 'test' -Primary $true -IPConfiguration $ipCfg `
+            | Set-AzureRmVmssOSProfile -ComputerNamePrefix 'test' -AdminUsername $adminUsername -AdminPassword $adminPassword `
+            | Set-AzureRmVmssStorageProfile -OsDiskCreateOption 'FromImage' -OsDiskCaching 'None' `
+            -ImageReferenceOffer $imgRef.Offer -ImageReferenceSku $imgRef.Skus -ImageReferenceVersion $imgRef.Version `
+            -ImageReferencePublisher $imgRef.PublisherName `
+            | Add-AzureRmVmssExtension -Name $extname -Publisher $publisher -Type $exttype -TypeHandlerVersion $extver -AutoUpgradeMinorVersion $true;
+
+        $result = New-AzureRmVmss -ResourceGroupName $rgname -Name $vmssName -VirtualMachineScaleSet $vmss;
+
+        Assert-AreEqual $loc.Replace(" ", "").ToLowerInvariant() $result.Location;
+        Assert-AreEqual 2 $result.Sku.Capacity;
+        Assert-AreEqual 'Standard_A0' $result.Sku.Name;
+        Assert-AreEqual 'Automatic' $result.UpgradePolicy.Mode;
+        Assert-False { $result.UpgradePolicy.AutomaticOSUpgradePolicy.DisableAutomaticRollback };
+
+        # Validate Network Profile
+        Assert-AreEqual 'test' $result.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Name;
+        Assert-AreEqual $true $result.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Primary;
+        Assert-AreEqual $subnetId `
+            $result.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].IpConfigurations[0].Subnet.Id;
+
+        # Validate OS Profile
+        Assert-AreEqual 'test' $result.VirtualMachineProfile.OsProfile.ComputerNamePrefix;
+        Assert-AreEqual $adminUsername $result.VirtualMachineProfile.OsProfile.AdminUsername;
+        Assert-Null $result.VirtualMachineProfile.OsProfile.AdminPassword;
+
+        # Validate Storage Profile
+        Assert-AreEqual $imgRef.Offer $result.VirtualMachineProfile.StorageProfile.ImageReference.Offer;
+        Assert-AreEqual $imgRef.Skus $result.VirtualMachineProfile.StorageProfile.ImageReference.Sku;
+        Assert-AreEqual $imgRef.Version $result.VirtualMachineProfile.StorageProfile.ImageReference.Version;
+        Assert-AreEqual $imgRef.PublisherName $result.VirtualMachineProfile.StorageProfile.ImageReference.Publisher;
+
+        # Validate Extension Profile
+        Assert-AreEqual $extname $result.VirtualMachineProfile.ExtensionProfile.Extensions[0].Name;
+        Assert-AreEqual $publisher $result.VirtualMachineProfile.ExtensionProfile.Extensions[0].Publisher;
+        Assert-AreEqual $exttype $result.VirtualMachineProfile.ExtensionProfile.Extensions[0].Type;
+        Assert-AreEqual $extver $result.VirtualMachineProfile.ExtensionProfile.Extensions[0].TypeHandlerVersion;
+        Assert-AreEqual $true $result.VirtualMachineProfile.ExtensionProfile.Extensions[0].AutoUpgradeMinorVersion;
+
+        # Verify the result of VMSS
+        $vmss = Get-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName;
+        Assert-AreEqual $null $vmss.Zones;
+        Assert-AreEqual 0 $vmss.Tags.Count;
+        Assert-AreEqual 2 $vmss.Sku.Capacity;
+        Assert-AreEqual $false $vmss.VirtualMachineProfile.StorageProfile.OsDisk.WriteAcceleratorEnabled;
+
+        $vmss2 = $vmss | Update-AzureRmVmss -DisableAutoRollback $true;
+        Assert-True { $vmss2.UpgradePolicy.AutomaticOSUpgradePolicy.DisableAutomaticRollback };
+
+        $result = Get-AzureRmVmss -ResourceGroupName $rgname -VMScaleSetName $vmssName -OSUpgradeHistory;
+        Assert-Null $result
     }
     finally
     {

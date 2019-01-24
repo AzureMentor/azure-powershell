@@ -17,7 +17,8 @@ Creates an in-memory certificate policy object.
 ```
 New-AzureKeyVaultCertificatePolicy [-IssuerName] <String> [-SubjectName] <String>
  [-RenewAtNumberOfDaysBeforeExpiry <Int32>] [-RenewAtPercentageLifetime <Int32>] [-SecretContentType <String>]
- [-ReuseKeyOnRenewal] [-Disabled] [-KeyUsage <System.Collections.Generic.List`1[System.String]>]
+ [-ReuseKeyOnRenewal] [-Disabled]
+ [-KeyUsage <System.Collections.Generic.List`1[System.Security.Cryptography.X509Certificates.X509KeyUsageFlags]>]
  [-Ekus <System.Collections.Generic.List`1[System.String]>] [-ValidityInMonths <Int32>]
  [-CertificateType <String>] [-EmailAtNumberOfDaysBeforeExpiry <Int32>] [-EmailAtPercentageLifetime <Int32>]
  [-KeyType <String>] [-KeyNotExportable] [-DefaultProfile <IAzureContextContainer>] [-WhatIf] [-Confirm]
@@ -29,7 +30,7 @@ New-AzureKeyVaultCertificatePolicy [-IssuerName] <String> [-SubjectName] <String
 New-AzureKeyVaultCertificatePolicy [-IssuerName] <String> [[-SubjectName] <String>]
  [-DnsName] <System.Collections.Generic.List`1[System.String]> [-RenewAtNumberOfDaysBeforeExpiry <Int32>]
  [-RenewAtPercentageLifetime <Int32>] [-SecretContentType <String>] [-ReuseKeyOnRenewal] [-Disabled]
- [-KeyUsage <System.Collections.Generic.List`1[System.String]>]
+ [-KeyUsage <System.Collections.Generic.List`1[System.Security.Cryptography.X509Certificates.X509KeyUsageFlags]>]
  [-Ekus <System.Collections.Generic.List`1[System.String]>] [-ValidityInMonths <Int32>]
  [-CertificateType <String>] [-EmailAtNumberOfDaysBeforeExpiry <Int32>] [-EmailAtPercentageLifetime <Int32>]
  [-KeyType <String>] [-KeyNotExportable] [-DefaultProfile <IAzureContextContainer>] [-WhatIf] [-Confirm]
@@ -42,8 +43,29 @@ The **New-AzureKeyVaultCertificatePolicy** cmdlet creates an in-memory certifica
 ## EXAMPLES
 
 ### Example 1: Create a certificate policy
-```
-PS C:\>New-AzureKeyVaultCertificatePolicy -SecretContentType "application/x-pkcs12" -SubjectName "CN=contoso.com" -IssuerName "Self" -ValidityInMonths 6 -ReuseKeyOnRenewal
+```powershell
+PS C:\> New-AzureKeyVaultCertificatePolicy -SecretContentType "application/x-pkcs12" -SubjectName "CN=contoso.com" -IssuerName "Self" -ValidityInMonths 6 -ReuseKeyOnRenewal
+
+SecretContentType               : application/x-pkcs12
+Kty                             :
+KeySize                         : 2048
+Exportable                      :
+ReuseKeyOnRenewal               : True
+SubjectName                     : CN=contoso.com
+DnsNames                        :
+KeyUsage                        :
+Ekus                            :
+ValidityInMonths                : 6
+IssuerName                      : Self
+CertificateType                 :
+RenewAtNumberOfDaysBeforeExpiry :
+RenewAtPercentageLifetime       :
+EmailAtNumberOfDaysBeforeExpiry :
+EmailAtPercentageLifetime       :
+CertificateTransparency         :
+Enabled                         : True
+Created                         :
+Updated                         :
 ```
 
 This command creates a certificate policy that is valid for six months and reuses the key to renew the certificate.
@@ -54,7 +76,7 @@ This command creates a certificate policy that is valid for six months and reuse
 Specifies the type of certificate to the issuer.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
 Aliases:
 
@@ -69,7 +91,7 @@ Accept wildcard characters: False
 The credentials, account, tenant, and subscription used for communication with azure
 
 ```yaml
-Type: IAzureContextContainer
+Type: Microsoft.Azure.Commands.Common.Authentication.Abstractions.IAzureContextContainer
 Parameter Sets: (All)
 Aliases: AzureRmContext, AzureCredential
 
@@ -84,7 +106,7 @@ Accept wildcard characters: False
 Indicates that the certificate policy is disabled.
 
 ```yaml
-Type: SwitchParameter
+Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
 Aliases:
 
@@ -129,7 +151,7 @@ Accept wildcard characters: False
 Specifies how many days before expiry the automatic notification process begins.
 
 ```yaml
-Type: Int32
+Type: System.Nullable`1[System.Int32]
 Parameter Sets: (All)
 Aliases:
 
@@ -144,7 +166,7 @@ Accept wildcard characters: False
 Specifies the percentage of the lifetime after which the automatic process for the notification begins.
 
 ```yaml
-Type: Int32
+Type: System.Nullable`1[System.Int32]
 Parameter Sets: (All)
 Aliases:
 
@@ -159,7 +181,7 @@ Accept wildcard characters: False
 Specifies the name of the issuer for the certificate.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
 Aliases:
 
@@ -174,7 +196,7 @@ Accept wildcard characters: False
 Indicates that the key is not exportable.
 
 ```yaml
-Type: SwitchParameter
+Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
 Aliases:
 
@@ -188,12 +210,11 @@ Accept wildcard characters: False
 ### -KeyType
 Specifies the key type of the key that backs the certificate.
 The acceptable values for this parameter are:
-
 - RSA
 - RSA-HSM
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
 Aliases:
 Accepted values: RSA, RSA-HSM
@@ -209,9 +230,10 @@ Accept wildcard characters: False
 Specifies the key usages in the certificate.
 
 ```yaml
-Type: System.Collections.Generic.List`1[System.String]
+Type: System.Collections.Generic.List`1[System.Security.Cryptography.X509Certificates.X509KeyUsageFlags]
 Parameter Sets: (All)
 Aliases:
+Accepted values: None, EncipherOnly, CrlSign, KeyCertSign, KeyAgreement, DataEncipherment, KeyEncipherment, NonRepudiation, DigitalSignature, DecipherOnly
 
 Required: False
 Position: Named
@@ -224,7 +246,7 @@ Accept wildcard characters: False
 Specifies the number of days before expiry after which the automatic process for certificate renewal begins.
 
 ```yaml
-Type: Int32
+Type: System.Nullable`1[System.Int32]
 Parameter Sets: (All)
 Aliases:
 
@@ -239,7 +261,7 @@ Accept wildcard characters: False
 Specifies the percentage of the lifetime after which the automatic process for certificate renewal begins.
 
 ```yaml
-Type: Int32
+Type: System.Nullable`1[System.Int32]
 Parameter Sets: (All)
 Aliases:
 
@@ -254,7 +276,7 @@ Accept wildcard characters: False
 Indicates that the certificate reuse the key during renewal.
 
 ```yaml
-Type: SwitchParameter
+Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
 Aliases:
 
@@ -268,12 +290,11 @@ Accept wildcard characters: False
 ### -SecretContentType
 Specifies the content type of the new key vault secret.
 The acceptable values for this parameter are:
-
 - application/x-pkcs12
 - application/x-pem-file
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: (All)
 Aliases:
 Accepted values: application/x-pkcs12, application/x-pem-file
@@ -289,7 +310,7 @@ Accept wildcard characters: False
 Specifies the subject name of the certificate.
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: SubjectName
 Aliases:
 
@@ -301,7 +322,7 @@ Accept wildcard characters: False
 ```
 
 ```yaml
-Type: String
+Type: System.String
 Parameter Sets: DNSNames
 Aliases:
 
@@ -316,7 +337,7 @@ Accept wildcard characters: False
 Specifies the number of months the certificate is valid.
 
 ```yaml
-Type: Int32
+Type: System.Nullable`1[System.Int32]
 Parameter Sets: (All)
 Aliases:
 
@@ -331,7 +352,7 @@ Accept wildcard characters: False
 Prompts you for confirmation before running the cmdlet.
 
 ```yaml
-Type: SwitchParameter
+Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
 Aliases: cf
 
@@ -347,7 +368,7 @@ Shows what would happen if the cmdlet runs.
 The cmdlet is not run.
 
 ```yaml
-Type: SwitchParameter
+Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
 Aliases: wi
 
@@ -363,8 +384,15 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
-This cmdlet does not accept any input.
+### System.String
+
+### System.Collections.Generic.List`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]
+
+### System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]
+
+### System.Management.Automation.SwitchParameter
+
+### System.Collections.Generic.List`1[[System.Security.Cryptography.X509Certificates.X509KeyUsageFlags, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]
 
 ## OUTPUTS
 
