@@ -1,5 +1,5 @@
 ﻿#Requires -Modules platyPS
-function Generate-MarkdownHelp
+function New-AzMarkdownHelp
 {
     [CmdletBinding()]
     Param
@@ -22,7 +22,7 @@ function Generate-MarkdownHelp
     New-Item -Path $NewHelpFolderPath -ItemType Directory -Force | Out-Null
     Copy-Item -Path "$HelpFolderPath\*" -Destination $NewHelpFolderPath
     Update-MarkdownHelpModule -Path $NewHelpFolderPath -RefreshModulePage -AlphabeticParamsOrder | Out-Null
-    $errors = Compare-MarkdownHelp $HelpFolderPath $NewHelpFolderPath
+    $errors = Compare-AzMarkdownHelp $HelpFolderPath $NewHelpFolderPath
     if ($errors.Length -gt 0)
     {
         $errorMessage = @()
@@ -35,7 +35,7 @@ function Generate-MarkdownHelp
     Remove-Item $NewHelpFolderPath -Recurse
 }
 
-function Compare-MarkdownHelp
+function Compare-AzMarkdownHelp
 {
     [CmdletBinding()]
     Param
@@ -74,7 +74,7 @@ function Compare-MarkdownHelp
     return $errors
 }
 
-function Validate-MarkdownHelp
+function Test-AzMarkdownHelp
 {
     [CmdletBinding()]
     Param(
@@ -101,7 +101,7 @@ function Validate-MarkdownHelp
                 continue
             }
 
-            $CmdletName = $file.Name -replace ".md",""
+            $CmdletName = $file.BaseName
 
             $fileErrors = @()
             $content = Get-Content $file.FullName
@@ -225,10 +225,11 @@ function Validate-MarkdownHelp
                     }
                     "online version:"
                     {
-                        $split = $content[$idx] -split ':'
-                        if ([string]::IsNullOrWhiteSpace($split[1]))
+                        $onlineString = "https://docs.microsoft.com/en-us/powershell/module/$($ModuleName.ToLower())/$($CmdletName.ToLower())"
+                        $split = $content[$idx] -split "online version:"
+                        if ([string]::IsNullOrWhiteSpace($split[1]) -or $split[1] -notlike "*$onlineString*")
                         {
-                            $fileErrors += "No entry was found for the online version field in the header. The corresponding URL should be the following: https://docs.microsoft.com/en-us/powershell/module/$($ModuleName.ToLower())/$($CmdletName.ToLower())"
+                            $fileErrors += "Online version in the header of the file is incorrect. The corresponding URL should be the following: $onlineString"
                         }
                     }
                     default
@@ -241,7 +242,7 @@ function Validate-MarkdownHelp
             # If the markdown file had any missing help, add them to the list to be printed later
             if ($fileErrors.Count -gt 0)
             {
-                $fileExceptions = $Exceptions | where { $_.Target -eq "$file" }
+                $fileExceptions = $Exceptions | where { $_.Target -eq "$($file.Name)" }
                 $fileErrors | foreach {
                     $error = $_
 
@@ -251,7 +252,7 @@ function Validate-MarkdownHelp
                     }
                     else
                     {
-                        $errors += "$file,$error"
+                        $errors += "$($file.Name),$error"
                     }
                 }
             }
@@ -265,7 +266,7 @@ function Validate-MarkdownHelp
     }
 }
 
-function Generate-MamlHelp
+function New-AzMamlHelp
 {
     [CmdletBinding()]
     Param
@@ -283,10 +284,10 @@ function Generate-MamlHelp
     $MAML = $dir | Where { $_.FullName -like "*.dll-Help.xml*" }
 
     # Modify the MAML (add spaces between examples)
-    $MAML | foreach { Modify-MamlHelp $HelpFolder $_ }
+    $MAML | foreach { Edit-AzMamlHelp $HelpFolder $_ }
 }
 
-function Modify-MamlHelp
+function Edit-AzMamlHelp
 {
     [CmdletBinding()]
     Param
