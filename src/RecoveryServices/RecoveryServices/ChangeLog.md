@@ -18,6 +18,18 @@
         - Additional information about change #1
 -->
 ## Upcoming Release
+* Update 'Get-AzRecoveryServicesBackupJob.md'
+* Update 'Get-AzRecoveryServicesBackupContainer.md'
+* Update 'Get-AzRecoveryServicesVault.md'
+* Update 'Wait-AzRecoveryServicesBackupJob.md'
+* Updated service call for Unregistering container for Azure File Share
+
+## Version 1.4.2
+* Fix for get-policy command for IaaSVMs
+* Fixes regarding 'Set-AzRecoveryServicesVaultContext' deprecation
+
+## Version 1.4.1
+* IaaSVM policy minimum retention in days changed to 7 from 1
 
 ## Version 1.4.0
 * Support for Cross subscription Azure to Azure site recovery.

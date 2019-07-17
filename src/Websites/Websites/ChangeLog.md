@@ -18,6 +18,16 @@
         - Additional information about change #1
 -->
 ## Upcoming Release
+* Fixing a bug where some SiteConfig properties were not returned by Get-AzWebApp and Set-AzWebApp
+* Adds a new Location parameter to Get-AzDeletedWebApp and Restore-AzDeletedWebApp
+* Fixes a bug with cloning web app slots using New-AzWebApp -IncludeSourceWebAppSlots
+
+## Version 1.3.0
+* Optimizes Get-AzWebAppCertificate to filter by resource group on the server instead of the client
+* Adds -UseDisasterRecovery switch parameter to Get-AzWebAppSnapshot
+
+## Version 1.2.2
+* fixes the issue where using  Set-AzWebApp and Set-AzWebAppSlot with -WebApp property was removing the tags
 
 ## Version 1.2.1
 * "Kind" property will now be set for PSSite objects returned by Get-AzWebApp
