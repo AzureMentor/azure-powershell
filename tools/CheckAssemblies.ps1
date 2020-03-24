@@ -17,15 +17,15 @@ param(
     [System.String]$BuildConfig
 )
 
-$ProjectPaths = @( "$PSScriptRoot\..\src\ResourceManager" )
-$DependencyMapPath = "$PSScriptRoot\..\src\Package\DependencyMap.csv"
+$ProjectPaths = @( "$PSScriptRoot\..\artifacts\$BuildConfig" )
+$DependencyMapPath = "$PSScriptRoot\..\artifacts\StaticAnalysisResults\DependencyMap.csv"
 
 $DependencyMap = Import-Csv -Path $DependencyMapPath
 
 $ModuleManifestFiles = $ProjectPaths | ForEach-Object { Get-ChildItem -Path $_ -Filter "*.psd1" -Recurse | Where-Object { $_.FullName -like "*$($BuildConfig)*" -and `
             $_.FullName -notlike "*Netcore*" -and `
             $_.FullName -notlike "*dll-Help.psd1*" -and `
-            $_.FullName -notlike "*Stack*" } }
+            ($_.FullName -notlike "*Stack*" -or $_.FullName -like "*StackEdge*") } }
 
 foreach ($ModuleManifest in $ModuleManifestFiles) {
     Write-Host "checking $($ModuleManifest.Fullname)"
@@ -61,7 +61,7 @@ foreach ($ModuleManifest in $ModuleManifestFiles) {
         }
     }
 
-    $LoadedAssemblies = $LoadedAssemblies | ForEach-Object { $_.Substring(2).Replace(".dll", "") }
+    $LoadedAssemblies = $LoadedAssemblies | ForEach-Object { $_.Replace(".dll", "") }
 
     $Found = @()
     foreach ($Assembly in $Assemblies) {

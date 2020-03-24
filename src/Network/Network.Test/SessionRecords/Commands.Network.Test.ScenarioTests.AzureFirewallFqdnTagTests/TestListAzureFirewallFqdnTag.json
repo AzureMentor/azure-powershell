@@ -1,0 +1,75 @@
+{
+  "Entries": [
+    {
+      "RequestUri": "/subscriptions/d2ad5196-2292-4080-b209-ce4399b0a807/providers/Microsoft.Network/azureFirewallFqdnTags?api-version=2019-12-01",
+      "EncodedRequestUri": "L3N1YnNjcmlwdGlvbnMvZDJhZDUxOTYtMjI5Mi00MDgwLWIyMDktY2U0Mzk5YjBhODA3L3Byb3ZpZGVycy9NaWNyb3NvZnQuTmV0d29yay9henVyZUZpcmV3YWxsRnFkblRhZ3M/YXBpLXZlcnNpb249MjAxOS0xMi0wMQ==",
+      "RequestMethod": "GET",
+      "RequestBody": "",
+      "RequestHeaders": {
+        "x-ms-client-request-id": [
+          "7d2035eb-7705-4dfd-a2da-9c71b6b1504c"
+        ],
+        "Accept-Language": [
+          "en-US"
+        ],
+        "User-Agent": [
+          "FxVersion/4.6.28516.03",
+          "OSName/Windows",
+          "OSVersion/Microsoft.Windows.10.0.14393.",
+          "Microsoft.Azure.Management.Network.NetworkManagementClient/20.0.0.0"
+        ]
+      },
+      "ResponseHeaders": {
+        "Cache-Control": [
+          "no-cache"
+        ],
+        "Pragma": [
+          "no-cache"
+        ],
+        "x-ms-request-id": [
+          "8013f713-feb8-473a-9611-aca278fd0c29"
+        ],
+        "x-ms-correlation-request-id": [
+          "ab976f06-d935-44e0-9e53-ac2fa68a2221"
+        ],
+        "x-ms-arm-service-request-id": [
+          "8f8b4005-a920-46cb-b1ab-91203815114b"
+        ],
+        "Strict-Transport-Security": [
+          "max-age=31536000; includeSubDomains"
+        ],
+        "Server": [
+          "Microsoft-HTTPAPI/2.0",
+          "Microsoft-HTTPAPI/2.0"
+        ],
+        "x-ms-ratelimit-remaining-subscription-reads": [
+          "11999"
+        ],
+        "x-ms-routing-request-id": [
+          "WESTUS2:20200310T170559Z:ab976f06-d935-44e0-9e53-ac2fa68a2221"
+        ],
+        "X-Content-Type-Options": [
+          "nosniff"
+        ],
+        "Date": [
+          "Tue, 10 Mar 2020 17:05:59 GMT"
+        ],
+        "Content-Length": [
+          "1988"
+        ],
+        "Content-Type": [
+          "application/json; charset=utf-8"
+        ],
+        "Expires": [
+          "-1"
+        ]
+      },
+      "ResponseBody": "{\r\n  \"value\": [\r\n    {\r\n      \"name\": \"MicrosoftActiveProtectionService\",\r\n      \"id\": \"/subscriptions//resourceGroups//providers/Microsoft.Network/azureFirewallFqdnTags/\",\r\n      \"type\": \"Microsoft.Network/azureFirewallFqdnTags\",\r\n      \"properties\": {\r\n        \"provisioningState\": \"Succeeded\",\r\n        \"fqdnTagName\": \"MicrosoftActiveProtectionService\"\r\n      }\r\n    },\r\n    {\r\n      \"name\": \"WindowsDiagnostics\",\r\n      \"id\": \"/subscriptions//resourceGroups//providers/Microsoft.Network/azureFirewallFqdnTags/\",\r\n      \"type\": \"Microsoft.Network/azureFirewallFqdnTags\",\r\n      \"properties\": {\r\n        \"provisioningState\": \"Succeeded\",\r\n        \"fqdnTagName\": \"WindowsDiagnostics\"\r\n      }\r\n    },\r\n    {\r\n      \"name\": \"WindowsUpdate\",\r\n      \"id\": \"/subscriptions//resourceGroups//providers/Microsoft.Network/azureFirewallFqdnTags/\",\r\n      \"type\": \"Microsoft.Network/azureFirewallFqdnTags\",\r\n      \"properties\": {\r\n        \"provisioningState\": \"Succeeded\",\r\n        \"fqdnTagName\": \"WindowsUpdate\"\r\n      }\r\n    },\r\n    {\r\n      \"name\": \"AppServiceEnvironment\",\r\n      \"id\": \"/subscriptions//resourceGroups//providers/Microsoft.Network/azureFirewallFqdnTags/\",\r\n      \"type\": \"Microsoft.Network/azureFirewallFqdnTags\",\r\n      \"properties\": {\r\n        \"provisioningState\": \"Succeeded\",\r\n        \"fqdnTagName\": \"AppServiceEnvironment\"\r\n      }\r\n    },\r\n    {\r\n      \"name\": \"AzureBackup\",\r\n      \"id\": \"/subscriptions//resourceGroups//providers/Microsoft.Network/azureFirewallFqdnTags/\",\r\n      \"type\": \"Microsoft.Network/azureFirewallFqdnTags\",\r\n      \"properties\": {\r\n        \"provisioningState\": \"Succeeded\",\r\n        \"fqdnTagName\": \"AzureBackup\"\r\n      }\r\n    },\r\n    {\r\n      \"name\": \"HDInsight\",\r\n      \"id\": \"/subscriptions//resourceGroups//providers/Microsoft.Network/azureFirewallFqdnTags/\",\r\n      \"type\": \"Microsoft.Network/azureFirewallFqdnTags\",\r\n      \"properties\": {\r\n        \"provisioningState\": \"Succeeded\",\r\n        \"fqdnTagName\": \"HDInsight\"\r\n      }\r\n    }\r\n  ]\r\n}",
+      "StatusCode": 200
+    }
+  ],
+  "Names": {},
+  "Variables": {
+    "SubscriptionId": "d2ad5196-2292-4080-b209-ce4399b0a807"
+  }
+}

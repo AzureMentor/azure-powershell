@@ -15,30 +15,22 @@ namespace VersionController.Models
             OutputModuleManifestPath = outputModuleManifestPath;
             ProjectModuleManifestPath = projectModuleManifestPath;
 
-            _outputDirectories = new List<string>
-            {
-                Path.Combine(DebugDirectory, @"ResourceManager\AzureResourceManager\"),
-                Path.Combine(DebugDirectory, @"ServiceManagement\"),
-                Path.Combine(DebugDirectory, @"Storage\")
-            };
+            _outputDirectories = new List<string>{ DebugDirectory };
 
-            _projectDirectories = new List<string>
-            {
-                Path.Combine(SrcDirectory, @"ResourceManager\"),
-                Path.Combine(SrcDirectory, @"ServiceManagement\"),
-                Path.Combine(SrcDirectory, @"Storage\")
-            };
+            _projectDirectories = new List<string>{ SrcDirectory };
         }
 
         public string RootDirectory { get; set; }
 
         public string SrcDirectory => Path.Combine(RootDirectory, @"src");
 
-        public string PackageDirectory => Path.Combine(SrcDirectory, @"Package");
+        public string PackageDirectory => Path.Combine(RootDirectory, @"artifacts");
 
         public string DebugDirectory => Path.Combine(PackageDirectory, @"Debug");
 
-        public string ExceptionsDirectory => Path.Combine(PackageDirectory, @"Exceptions");
+        public string ArtifactsVersionControllerDirectory => Path.Combine(PackageDirectory, @"VersionController");
+
+        public string ExceptionsDirectory => Path.Combine(ArtifactsVersionControllerDirectory, @"Exceptions");
 
         public List<string> OutputDirectories => _outputDirectories;
 
@@ -50,7 +42,7 @@ namespace VersionController.Models
 
         public string SerializedCmdletsDirectory => Path.Combine(CommonToolsDirectory, @"SerializedCmdlets");
 
-        public string RollupModuleManifestPath => Path.Combine(ToolsDirectory, @"AzureRM\AzureRM.psd1");
+        public string RollupModuleManifestPath => Path.Combine(ToolsDirectory, @"Az\Az.psd1");
 
         public string VersionControllerDirectory => Path.Combine(ToolsDirectory, @"VersionController");
 

@@ -2,7 +2,7 @@ $mapping = [ordered]@{}
 
 $psd1s = Get-ChildItem -Path $PSScriptRoot/../src -Recurse | `
     Where-Object {($_.Name -like "*AzureRM*psd1"  -or $_.Name -eq "Azure.AnalysisServices.psd1" -or $_.Name -eq "Azure.Storage.psd1") `
-    -and $_.FullName -notlike "*Stack*" -and $_.FullName -notlike "*`\Package`\*" -and $_.FullName -notlike "*Test*" -and $_.FullName -notlike "*`\bin`\*" -and $_.FullName -notlike "*`\obj`\*"}
+    -and ($_.FullName -notlike "*Stack*" -or $_.FullName -like "*StackEdge*") -and $_.FullName -notlike "*`\Package`\*" -and $_.FullName -notlike "*Test*" -and $_.FullName -notlike "*`\bin`\*" -and $_.FullName -notlike "*`\obj`\*"}
 
 $psd1s | ForEach-Object {
     $name = (($_.Name -replace "AzureRM", "Az") -replace "Azure", "Az") -replace ".psd1", "" -replace "RecoveryServices.SiteRecovery", "RecoveryServices" -replace "RecoveryServices.Backup", "RecoveryServices"
@@ -40,4 +40,4 @@ $psd1s | ForEach-Object {
     }
 }
 
-ConvertTo-Json $mapping | Set-Content -Path $PSScriptRoot/../src/ResourceManager/Profile/Commands.Profile/AzureRmAlias/Mappings.json
+ConvertTo-Json $mapping | Set-Content -Path $PSScriptRoot/../src/Accounts/Accounts/AzureRmAlias/Mappings.json

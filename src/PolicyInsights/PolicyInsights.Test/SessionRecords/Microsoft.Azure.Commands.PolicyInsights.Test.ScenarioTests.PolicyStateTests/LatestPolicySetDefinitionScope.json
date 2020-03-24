@@ -1,0 +1,74 @@
+{
+  "Entries": [
+    {
+      "RequestUri": "/subscriptions/0b40be06-04e8-4f70-abde-a502b2646fe8/providers/Microsoft.Authorization/policySetDefinitions/716ef2c9-4404-4673-8609-f984d58c417d/providers/Microsoft.PolicyInsights/policyStates/latest/queryResults?api-version=2019-10-01&$top=10",
+      "EncodedRequestUri": "L3N1YnNjcmlwdGlvbnMvMGI0MGJlMDYtMDRlOC00ZjcwLWFiZGUtYTUwMmIyNjQ2ZmU4L3Byb3ZpZGVycy9NaWNyb3NvZnQuQXV0aG9yaXphdGlvbi9wb2xpY3lTZXREZWZpbml0aW9ucy83MTZlZjJjOS00NDA0LTQ2NzMtODYwOS1mOTg0ZDU4YzQxN2QvcHJvdmlkZXJzL01pY3Jvc29mdC5Qb2xpY3lJbnNpZ2h0cy9wb2xpY3lTdGF0ZXMvbGF0ZXN0L3F1ZXJ5UmVzdWx0cz9hcGktdmVyc2lvbj0yMDE5LTEwLTAxJiR0b3A9MTA=",
+      "RequestMethod": "POST",
+      "RequestBody": "",
+      "RequestHeaders": {
+        "x-ms-client-request-id": [
+          "ce7fe832-b2c5-4b8a-a8b9-40e678ff9685"
+        ],
+        "Accept-Language": [
+          "en-US"
+        ],
+        "User-Agent": [
+          "FxVersion/4.6.28207.03",
+          "OSName/Windows",
+          "OSVersion/Microsoft.Windows.10.0.18363.",
+          "Microsoft.Azure.Management.PolicyInsights.PolicyInsightsClient/3.0.0.0"
+        ]
+      },
+      "ResponseHeaders": {
+        "Cache-Control": [
+          "no-cache"
+        ],
+        "Pragma": [
+          "no-cache"
+        ],
+        "x-ms-ratelimit-remaining-subscription-policy-insights-requests": [
+          "597"
+        ],
+        "x-ms-request-id": [
+          ":55d2576b-a7b4-455b-a904-0a3e345e7c90"
+        ],
+        "Server": [
+          "Microsoft-HTTPAPI/2.0"
+        ],
+        "x-ms-ratelimit-remaining-subscription-reads": [
+          "11999"
+        ],
+        "x-ms-correlation-request-id": [
+          "beb1c20b-4fea-45d4-9f09-2347c9f51131"
+        ],
+        "x-ms-routing-request-id": [
+          "WESTUS:20191209T194017Z:beb1c20b-4fea-45d4-9f09-2347c9f51131"
+        ],
+        "Strict-Transport-Security": [
+          "max-age=31536000; includeSubDomains"
+        ],
+        "X-Content-Type-Options": [
+          "nosniff"
+        ],
+        "Date": [
+          "Mon, 09 Dec 2019 19:40:16 GMT"
+        ],
+        "Content-Length": [
+          "2178"
+        ],
+        "Content-Type": [
+          "application/json; charset=utf-8"
+        ],
+        "Expires": [
+          "-1"
+        ]
+      },
+      "ResponseBody": "{\r\n  \"@odata.context\": \"https://management.azure.com/subscriptions/0b40be06-04e8-4f70-abde-a502b2646fe8/providers/Microsoft.Authorization/policySetDefinitions/716ef2c9-4404-4673-8609-f984d58c417d/providers/Microsoft.PolicyInsights/policyStates/$metadata#latest\",\r\n  \"@odata.count\": 1,\r\n  \"value\": [\r\n    {\r\n      \"@odata.id\": null,\r\n      \"@odata.context\": \"https://management.azure.com/subscriptions/0b40be06-04e8-4f70-abde-a502b2646fe8/providers/Microsoft.Authorization/policySetDefinitions/716ef2c9-4404-4673-8609-f984d58c417d/providers/Microsoft.PolicyInsights/policyStates/$metadata#latest/$entity\",\r\n      \"timestamp\": \"2019-12-09T18:09:53.4817797Z\",\r\n      \"resourceId\": \"/subscriptions/0b40be06-04e8-4f70-abde-a502b2646fe8/resourcegroups/cleanupservice/providers/microsoft.keyvault/vaults/kv12-cleanupservice\",\r\n      \"policyAssignmentId\": \"/subscriptions/0b40be06-04e8-4f70-abde-a502b2646fe8/resourcegroups/cleanupservice/providers/microsoft.authorization/policyassignments/f6269e45cf94490e9c17839a\",\r\n      \"policyDefinitionId\": \"/providers/microsoft.authorization/policydefinitions/cf820ca0-f99e-4f3e-84fb-66e913812d21\",\r\n      \"effectiveParameters\": \"\",\r\n      \"isCompliant\": false,\r\n      \"subscriptionId\": \"0b40be06-04e8-4f70-abde-a502b2646fe8\",\r\n      \"resourceType\": \"/Microsoft.KeyVault/vaults\",\r\n      \"resourceLocation\": \"northcentralus\",\r\n      \"resourceGroup\": \"cleanupservice\",\r\n      \"resourceTags\": \"tbd\",\r\n      \"policyAssignmentName\": \"f6269e45cf94490e9c17839a\",\r\n      \"policyAssignmentOwner\": \"tbd\",\r\n      \"policyAssignmentParameters\": \"\",\r\n      \"policyAssignmentScope\": \"/subscriptions/0b40be06-04e8-4f70-abde-a502b2646fe8/resourceGroups/cleanupservice\",\r\n      \"policyDefinitionName\": \"cf820ca0-f99e-4f3e-84fb-66e913812d21\",\r\n      \"policyDefinitionAction\": \"auditifnotexists\",\r\n      \"policyDefinitionCategory\": \"tbd\",\r\n      \"policySetDefinitionId\": \"/subscriptions/0b40be06-04e8-4f70-abde-a502b2646fe8/providers/Microsoft.Authorization/policySetDefinitions/716ef2c9-4404-4673-8609-f984d58c417d\",\r\n      \"policySetDefinitionName\": \"716ef2c9-4404-4673-8609-f984d58c417d\",\r\n      \"policySetDefinitionOwner\": \"\",\r\n      \"policySetDefinitionCategory\": \"\",\r\n      \"policySetDefinitionParameters\": \"\",\r\n      \"managementGroupIds\": \"2PolicyTestMG,72f988bf-86f1-41af-91ab-2d7cd011db47\",\r\n      \"policyDefinitionReferenceId\": \"5296539991412600750\",\r\n      \"complianceState\": \"NonCompliant\",\r\n      \"policyDefinitionGroupNames\": [\r\n        \"\"\r\n      ]\r\n    }\r\n  ]\r\n}",
+      "StatusCode": 200
+    }
+  ],
+  "Names": {},
+  "Variables": {
+    "SubscriptionId": "0b40be06-04e8-4f70-abde-a502b2646fe8"
+  }
+}
